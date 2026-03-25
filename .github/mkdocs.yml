@@ -1,8 +1,8 @@
-site_name: 从零精通大模型工程
-site_url: https://YOUR_USERNAME.github.io/llm-tutorial
-site_description: 面向有深度学习基础的工程师的大模型系统学习笔记
-site_author: YOUR_NAME
-repo_url: https://github.com/YOUR_USERNAME/llm-tutorial
+site_name: 大模型从入门到入门
+site_url: https://github.com/Ferris-Liu/LLM-Start-from-the-scratch
+site_description: 本人大模型系统学习笔记
+site_author: FerrisLIU 
+repo_url: https://github.com/Ferris-Liu/LLM-Start-from-the-scratch
 repo_name: llm-tutorial
 edit_uri: edit/main/docs/
 
