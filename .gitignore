@@ -1,0 +1,36 @@
+# --- 机器学习/深度学习相关 ---
+# 忽略存储模型权重的文件夹
+weights/
+checkpoints/
+models/
+*.pth
+*.bin
+*.pt
+*.safetensors
+*.onnx
+
+# 忽略数据集文件夹
+data/
+datasets/
+*.csv
+*.jsonl
+*.txt
+# (如果你的原始数据在这些文件夹里，Git 就不会去碰它们)
+
+# --- Python 相关 ---
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+venv/
+env/
+.venv/
+
+# --- 操作系统相关 ---
+.DS_Store
+Thumbs.db
+
+# --- 编辑器相关 ---
+.vscode/
+.idea/
+*.swp
