@@ -5,7 +5,7 @@
 [![Deploy Docs](https://github.com/YOUR_USERNAME/llm-tutorial/actions/workflows/deploy.yml/badge.svg)](https://github.com/YOUR_USERNAME/llm-tutorial/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-📖 **在线阅读**：[your-username.github.io/llm-tutorial](https://your-username.github.io/llm-tutorial)
+📖 **在线阅读**：[ferris-liu.github.io/LLM-Start-from-the-scratch](https://ferris-liu.github.io/LLM-Start-from-the-scratch)
 
 ---
 
