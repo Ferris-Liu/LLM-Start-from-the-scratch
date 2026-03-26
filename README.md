@@ -49,4 +49,4 @@ mkdocs serve
 
 ## 📄 License
 
-MIT © YOUR_NAME
+MIT © FerrisLIU
