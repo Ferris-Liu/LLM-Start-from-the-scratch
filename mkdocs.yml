@@ -1,0 +1,111 @@
+site_name: 大模型从入门到入门
+site_url: site_url:https://ferris-liu.github.io/LLM-Start-from-the-scratch/
+site_description: 本人大模型系统学习笔记
+site_author: FerrisLIU 
+repo_url: https://github.com/Ferris-Liu/LLM-Start-from-the-scratch
+repo_name: llm-tutorial
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: default
+      primary: black
+      accent: deep purple
+      toggle:
+        icon: material/weather-night
+        name: 切换到深色模式
+    - scheme: slate
+      primary: black
+      accent: deep purple
+      toggle:
+        icon: material/weather-sunny
+        name: 切换到浅色模式
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.instant
+    - navigation.instant.progress
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - toc.follow
+    - toc.integrate
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+
+plugins:
+  - search:
+      lang: zh
+  - git-revision-date-localized:
+      enable_creation_date: true
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+extra_javascript:
+  - assets/javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/YOUR_USERNAME
+
+nav:
+  - 首页: index.md
+  - 01 · Transformer 精通:
+    - 概览: 01-transformer/index.md
+    - Attention 机制: 01-transformer/attention.md
+    - 位置编码: 01-transformer/positional-encoding.md
+    - KV Cache: 01-transformer/kv-cache.md
+    - 主流架构对比: 01-transformer/architectures.md
+    - 动手实现 miniGPT: 01-transformer/minigpt.md
+  - 02 · HuggingFace 生态:
+    - 概览: 02-huggingface/index.md
+  - 03 · RAG 系统:
+    - 概览: 03-rag/index.md
+  - 04 · Agent 开发:
+    - 概览: 04-agent/index.md
+  - 05 · 微调与对齐:
+    - 概览: 05-finetune/index.md
+  - 06 · 推理部署:
+    - 概览: 06-inference/index.md
+  - 07 · 评测体系:
+    - 概览: 07-evaluation/index.md
+  - 08 · 系统设计:
+    - 概览: 08-system-design/index.md
+  - 09 · 前沿追踪:
+    - 概览: 09-frontier/index.md
