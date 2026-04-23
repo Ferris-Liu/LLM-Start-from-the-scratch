@@ -1,9 +1,9 @@
-site_name: 大模型从入门到入门
-site_url: site_url:https://ferris-liu.github.io/LLM-Start-from-the-scratch/
-site_description: 本人大模型系统学习笔记
-site_author: FerrisLIU 
+site_name: 从零学习大模型工程
+site_url: https://ferris-liu.github.io/LLM-Start-from-the-scratch/
+site_description: 一个工程师系统自学 LLM 的过程记录，从 Transformer 到 RAG、Agent、微调和部署。
+site_author: FerrisLIU
 repo_url: https://github.com/Ferris-Liu/LLM-Start-from-the-scratch
-repo_name: llm-tutorial
+repo_name: Ferris-Liu/LLM-Start-from-the-scratch
 edit_uri: edit/main/docs/
 
 theme:
@@ -82,10 +82,11 @@ extra_javascript:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/YOUR_USERNAME
+      link: https://github.com/Ferris-Liu
 
 nav:
   - 首页: index.md
+  - 写作路线图: roadmap.md
   - 01 · Transformer 精通:
     - 概览: 01-transformer/index.md
     - Attention 机制: 01-transformer/attention.md

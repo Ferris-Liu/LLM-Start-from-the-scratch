@@ -11,4 +11,4 @@
 - [ ] ALiBi — 外推性更好的方案
 - [ ] YaRN — 长上下文外推技术
 
-> 🚧 此节正在撰写中，欢迎在 [Issue](https://github.com/YOUR_USERNAME/llm-tutorial/issues) 中催更或贡献内容。
+> 🚧 此节正在撰写中，欢迎在 [Issue](https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/issues) 中催更或贡献内容。

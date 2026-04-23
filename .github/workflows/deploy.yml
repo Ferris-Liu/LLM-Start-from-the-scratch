@@ -1,28 +1,38 @@
-name: ci 
+name: Deploy Docs
+
 on:
   push:
     branches:
       - main
+
 permissions:
   contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Configure Git Credentials
+
+      - name: Configure Git credentials
         run: |
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@users.noreply.github.com
+
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.x
-      - run: echo "cache_id=$(date +%U)" >> $GITHUB_ENV 
-      - uses: actions/cache@v4
+          python-version: "3.x"
+
+      - name: Cache MkDocs assets
+        uses: actions/cache@v4
         with:
-          key: mkdocs-material-${{ env.cache_id }}
+          key: mkdocs-material-${{ github.run_id }}
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install mkdocs-material 
-      - run: mkdocs gh-deploy --force
+
+      - name: Install dependencies
+        run: pip install -r requirements-docs.txt
+
+      - name: Deploy to GitHub Pages
+        run: mkdocs gh-deploy --force
