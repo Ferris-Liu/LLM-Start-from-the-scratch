@@ -1,8 +1,18 @@
-# 从零学习大模型工程
-
-欢迎来到这份开源学习笔记。它记录我系统自学 LLM 工程的过程：从 Transformer 底层原理，到 HuggingFace、RAG、Agent、微调、推理部署和系统设计。
-
-这不是已经完成的权威教材，而是一份持续更新的学习日志。我会尽量把每个主题写成“能理解、能运行、能复现”的形式，也会记录学习中的误解、卡点和工程细节。
+<section class="llm-hero">
+  <div class="llm-hero__eyebrow">LLM Engineering Notes</div>
+  <h1 class="llm-hero__title">从零学习大模型工程</h1>
+  <p class="llm-hero__subtitle">
+    一份面向工程实践的开源学习笔记：从 Transformer 底层原理，到 HuggingFace、RAG、Agent、微调、推理部署和系统设计。
+    目标不是把概念堆满，而是把每个主题写到能理解、能运行、能复现。
+  </p>
+  <div class="llm-hero__meta">
+    <span class="llm-pill">Transformer</span>
+    <span class="llm-pill">RAG</span>
+    <span class="llm-pill">Agent</span>
+    <span class="llm-pill">Finetune</span>
+    <span class="llm-pill">Inference</span>
+  </div>
+</section>
 
 !!! tip "学习建议"
     建议按主线阅读，但不要只看文字。遇到公式、张量形状或代码片段时，最好自己跑一遍、改一改，再继续往后读。
@@ -33,17 +43,53 @@ graph LR
 
 ## 模块一览
 
-| 模块 | 主题 | 适合方向 | 状态 |
-|------|------|---------|------|
-| [01 · Transformer 精通](01-transformer/index.md) | Attention / KV Cache / 架构对比 | 全方向必学 | 进行中 |
-| [02 · HuggingFace 生态](02-huggingface/index.md) | Transformers / PEFT / Datasets | 应用 / 部署 | 计划中 |
-| [03 · RAG 系统](03-rag/index.md) | 向量检索 / 混合搜索 / 评测 | 应用 | 计划中 |
-| [04 · Agent 开发](04-agent/index.md) | Function Call / ReAct / MCP | 应用 | 计划中 |
-| [05 · 微调与对齐](05-finetune/index.md) | LoRA / SFT / DPO | 研究 / 应用 | 计划中 |
-| [06 · 推理部署](06-inference/index.md) | vLLM / 量化 / 压测 | 部署 | 计划中 |
-| [07 · 评测体系](07-evaluation/index.md) | LLM-as-Judge / Benchmark | 应用 / 研究 | 计划中 |
-| [08 · 系统设计](08-system-design/index.md) | 流式输出 / 缓存 / 监控 | 部署 / 应用 | 计划中 |
-| [09 · 前沿追踪](09-frontier/index.md) | Reasoning / MoE / 多模态 | 研究 | 计划中 |
+<div class="llm-card-grid">
+  <article class="llm-card">
+    <h3><a href="01-transformer/">01 · Transformer 精通</a></h3>
+    <p>Attention、位置编码、KV Cache、架构对比和 miniGPT，从底层机制一路写到可运行实现。</p>
+    <span class="llm-card__status">进行中</span>
+  </article>
+  <article class="llm-card">
+    <h3><a href="02-huggingface/">02 · HuggingFace 生态</a></h3>
+    <p>Transformers、Datasets、PEFT 等常用工作流，面向应用和部署打基础。</p>
+    <span class="llm-card__status">计划中</span>
+  </article>
+  <article class="llm-card">
+    <h3><a href="03-rag/">03 · RAG 系统</a></h3>
+    <p>从文档切分、向量检索、混合搜索，到答案生成、评测和错误分析。</p>
+    <span class="llm-card__status">计划中</span>
+  </article>
+  <article class="llm-card">
+    <h3><a href="04-agent/">04 · Agent 开发</a></h3>
+    <p>Function Call、ReAct、MCP 和工具编排，把模型能力接入真实任务。</p>
+    <span class="llm-card__status">计划中</span>
+  </article>
+  <article class="llm-card">
+    <h3><a href="05-finetune/">05 · 微调与对齐</a></h3>
+    <p>LoRA、SFT、DPO 等训练流程，关注从实验到可复用工程管线。</p>
+    <span class="llm-card__status">计划中</span>
+  </article>
+  <article class="llm-card">
+    <h3><a href="06-inference/">06 · 推理部署</a></h3>
+    <p>vLLM、量化、压测、批处理和流式输出，围绕线上性能和成本展开。</p>
+    <span class="llm-card__status">计划中</span>
+  </article>
+  <article class="llm-card">
+    <h3><a href="07-evaluation/">07 · 评测体系</a></h3>
+    <p>LLM-as-Judge、Benchmark、回归测试和质量监控，让改动可比较。</p>
+    <span class="llm-card__status">计划中</span>
+  </article>
+  <article class="llm-card">
+    <h3><a href="08-system-design/">08 · 系统设计</a></h3>
+    <p>缓存、监控、灰度、链路追踪和系统边界，补上工程化最后一环。</p>
+    <span class="llm-card__status">计划中</span>
+  </article>
+  <article class="llm-card">
+    <h3><a href="09-frontier/">09 · 前沿追踪</a></h3>
+    <p>Reasoning、MoE、多模态和新模型架构，用工程视角跟进前沿。</p>
+    <span class="llm-card__status">计划中</span>
+  </article>
+</div>
 
 ## 写作路线
 
