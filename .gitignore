@@ -15,6 +15,7 @@ datasets/
 *.csv
 *.jsonl
 *.txt
+!requirements-docs.txt
 # (如果你的原始数据在这些文件夹里，Git 就不会去碰它们)
 
 # --- Python 相关 ---
