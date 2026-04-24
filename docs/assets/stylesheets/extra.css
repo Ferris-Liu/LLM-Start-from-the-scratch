@@ -76,12 +76,12 @@ select {
 
 .md-content__inner {
   padding-top: 0.6rem;
-  max-width: 50rem;
+  max-width: 56rem;
   margin: 0 auto;
 }
 
 .md-content__inner:has(.llm-hero--book) {
-  max-width: 64rem;
+  max-width: 70rem;
 }
 
 @media screen and (min-width: 76.25em) {
@@ -90,31 +90,37 @@ select {
   }
 
   .md-main__inner {
-    display: grid;
-    grid-template-columns: 13rem minmax(0, 52rem);
-    justify-content: center;
-    gap: 2.4rem;
-  }
-
-  .md-sidebar--primary,
-  .md-content {
-    margin: 0;
+    position: relative;
+    display: block;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .md-sidebar--primary {
-    width: 13rem;
+    position: fixed;
+    left: 1.6rem;
+    top: 6.8rem;
+    width: 12rem;
+    max-height: calc(100vh - 8rem);
+    overflow: auto;
+    padding-right: 0.4rem;
   }
 
   .md-sidebar--secondary {
     display: none;
   }
 
+  .md-content {
+    margin: 0 auto;
+  }
+
   .md-content__inner {
-    max-width: 52rem;
+    max-width: 58rem;
   }
 
   .md-content__inner:has(.llm-hero--book) {
-    max-width: 68rem;
+    max-width: 72rem;
   }
 }
 
@@ -197,8 +203,8 @@ select {
 
 .md-typeset {
   color: var(--llm-text);
-  font-size: 0.84rem;
-  line-height: 1.9;
+  font-size: 0.98rem;
+  line-height: 2;
   letter-spacing: 0;
 }
 
@@ -256,7 +262,7 @@ select {
 .md-typeset h2 {
   margin-top: 2.5rem;
   margin-bottom: 0.72rem;
-  font-size: 1.4rem;
+  font-size: 1.55rem;
 }
 
 .md-typeset h2::before {
@@ -273,7 +279,7 @@ select {
 
 .md-typeset h3 {
   margin-top: 1.6rem;
-  font-size: 1.08rem;
+  font-size: 1.18rem;
 }
 
 .md-typeset strong {
@@ -305,7 +311,7 @@ select {
   border-radius: 0.28rem;
   background: rgba(63, 73, 246, 0.08);
   color: var(--llm-accent-strong);
-  font-size: 0.81em;
+  font-size: 0.86em;
 }
 
 .md-typeset pre,
@@ -552,7 +558,7 @@ select {
 
 @media screen and (max-width: 44.9375em) {
   .md-typeset {
-    font-size: 0.8rem;
+    font-size: 0.92rem;
   }
 
   .md-main__inner {
