@@ -86,6 +86,8 @@ extra:
 
 nav:
   - 首页: index.md
+  - 作者介绍: about-author.md
+  - 前言: preface.md
   - 全书提纲与学习路线: roadmap.md
   - 全书导航:
     - 概览: book/index.md
