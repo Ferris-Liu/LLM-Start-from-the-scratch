@@ -116,7 +116,7 @@ select {
   }
 
   .md-content__inner {
-    max-width: 58rem;
+    max-width: 64rem;
   }
 
   .md-content__inner:has(.llm-hero--book) {
@@ -203,7 +203,7 @@ select {
 
 .md-typeset {
   color: var(--llm-text);
-  font-size: 0.98rem;
+  font-size: 1.05rem;
   line-height: 2;
   letter-spacing: 0;
 }
