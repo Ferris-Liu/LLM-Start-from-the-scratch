@@ -19,4 +19,4 @@
 
 ## 当前状态
 
-> 过渡页。后续会从简单 calculator / search / file retrieval agent 写起。
+> 草稿。后续会从简单 calculator / search / file retrieval agent 写起。

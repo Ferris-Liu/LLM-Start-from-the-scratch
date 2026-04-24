@@ -21,4 +21,4 @@
 
 ## 当前状态
 
-> 过渡页。后续会补上 bigram language model 的最小实现。
+> 草稿。后续会补上 bigram language model 的最小实现。

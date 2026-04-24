@@ -19,4 +19,4 @@
 
 ## 当前状态
 
-> 过渡页。后续会把 from-scratch 训练和 Hugging Face 训练流程衔接起来。
+> 草稿。后续会把 from-scratch 训练和 Hugging Face 训练流程衔接起来。
