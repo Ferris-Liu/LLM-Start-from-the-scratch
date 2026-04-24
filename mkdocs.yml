@@ -1,6 +1,6 @@
-site_name: 从零学习大模型工程
+site_name: LLM 从零到求职
 site_url: https://ferris-liu.github.io/LLM-Start-from-the-scratch/
-site_description: 一个工程师系统自学 LLM 的过程记录，从 Transformer 到 RAG、Agent、微调和部署。
+site_description: 面向机器学习基础学生的大模型学习笔记，从 Transformer、预训练、微调到 RAG、Agent、部署与求职准备。
 site_author: FerrisLIU
 repo_url: https://github.com/Ferris-Liu/LLM-Start-from-the-scratch
 repo_name: Ferris-Liu/LLM-Start-from-the-scratch
@@ -86,27 +86,32 @@ extra:
 
 nav:
   - 首页: index.md
-  - 写作路线图: roadmap.md
-  - 01 · Transformer 精通:
-    - 概览: 01-transformer/index.md
-    - Attention 机制: 01-transformer/attention.md
-    - 位置编码: 01-transformer/positional-encoding.md
-    - KV Cache: 01-transformer/kv-cache.md
-    - 主流架构对比: 01-transformer/architectures.md
-    - 动手实现 miniGPT: 01-transformer/minigpt.md
-  - 02 · HuggingFace 生态:
-    - 概览: 02-huggingface/index.md
-  - 03 · RAG 系统:
-    - 概览: 03-rag/index.md
-  - 04 · Agent 开发:
-    - 概览: 04-agent/index.md
-  - 05 · 微调与对齐:
-    - 概览: 05-finetune/index.md
-  - 06 · 推理部署:
-    - 概览: 06-inference/index.md
-  - 07 · 评测体系:
-    - 概览: 07-evaluation/index.md
-  - 08 · 系统设计:
-    - 概览: 08-system-design/index.md
-  - 09 · 前沿追踪:
-    - 概览: 09-frontier/index.md
+  - 全书提纲与学习路线: roadmap.md
+  - 全书导航:
+    - 概览: book/index.md
+  - Part 0 · 学习路线与岗位定位:
+    - 第 0 章：大模型岗位地图与学习路线: book/00-role-roadmap.md
+  - Part 1 · 基础补齐:
+    - 第 1 章：机器学习与深度学习最小必要基础: book/01-ml-dl-basics.md
+    - 第 2 章：PyTorch 与训练循环: book/02-pytorch-training-loop.md
+  - Part 2 · NLP 与语言模型基础:
+    - 第 3 章：NLP 基础与文本表示: book/03-nlp-text-representation.md
+    - 第 4 章：从 n-gram 到神经语言模型: book/04-ngram-to-neural-lm.md
+  - Part 3 · Transformer 核心:
+    - 第 5 章：Attention 机制: book/05-attention.md
+    - 第 6 章：Transformer 架构: book/06-transformer-architecture.md
+    - 第 7 章：从零实现一个 Mini-GPT: book/07-mini-gpt.md
+  - Part 4 · 现代 LLM 训练流程:
+    - 第 8 章：Tokenizer 与数据处理: book/08-tokenizer-data.md
+    - 第 9 章：预训练 Pretraining: book/09-pretraining.md
+    - 第 10 章：Scaling Law 与大模型为什么变大: book/10-scaling-law.md
+    - 第 11 章：LLM 评估: book/11-evaluation.md
+  - Part 5 · 后训练与微调:
+    - 第 12 章：Supervised Fine-Tuning，SFT: book/12-sft.md
+    - 第 13 章：参数高效微调：LoRA / QLoRA / PEFT: book/13-lora-qlora-peft.md
+    - 第 14 章：偏好对齐：RLHF / DPO / RLAIF: book/14-alignment.md
+  - Part 6 · LLM 应用工程:
+    - 第 15 章：Embedding、向量数据库与语义检索: book/15-embedding-retrieval.md
+    - 第 16 章：RAG 从原理到项目: book/16-rag.md
+    - 第 17 章：Agent 与 Tool Calling: book/17-agent-tool-calling.md
+    - 第 18 章：LLMOps、部署与生产化: book/18-llmops-deployment.md

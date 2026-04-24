@@ -261,6 +261,23 @@ input {
   padding: clamp(1.1rem, 3vw, 2rem) 0 0.4rem;
 }
 
+.llm-hero--book {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.llm-hero--book::before {
+  position: absolute;
+  inset: -1rem -1rem auto;
+  height: 14rem;
+  border-radius: 1.1rem;
+  background:
+    radial-gradient(circle at top left, rgba(47, 125, 111, 0.16), transparent 42%),
+    radial-gradient(circle at top right, rgba(196, 84, 61, 0.14), transparent 36%);
+  z-index: -1;
+  content: "";
+}
+
 .llm-hero__eyebrow {
   margin-bottom: 0.45rem;
   color: var(--llm-accent);
@@ -311,6 +328,10 @@ input {
   margin: 1rem 0 1.6rem;
 }
 
+.llm-card-grid--projects .llm-card {
+  min-height: 8.4rem;
+}
+
 .llm-card {
   min-height: 9.8rem;
   padding: 0.9rem 0.95rem;
@@ -345,6 +366,50 @@ input {
   color: var(--llm-accent);
   font-size: 0.64rem;
   font-weight: 760;
+}
+
+.llm-highlight-grid,
+.llm-path-grid {
+  display: grid;
+  gap: 0.9rem;
+  margin: 1rem 0 1.7rem;
+}
+
+.llm-highlight-grid {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.llm-path-grid {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.llm-highlight,
+.llm-path-card {
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--llm-border);
+  border-radius: 0.7rem;
+  background: var(--llm-surface);
+  box-shadow: var(--llm-shadow);
+}
+
+.llm-highlight p,
+.llm-path-card p {
+  margin: 0.25rem 0 0;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.76rem;
+}
+
+.llm-highlight__label {
+  color: var(--llm-accent);
+  font-size: 0.68rem;
+  font-weight: 780;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.llm-path-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.93rem;
 }
 
 @media screen and (max-width: 44.9375em) {

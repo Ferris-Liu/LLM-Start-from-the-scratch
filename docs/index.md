@@ -1,105 +1,132 @@
-<section class="llm-hero">
-  <div class="llm-hero__eyebrow">LLM Engineering Notes</div>
-  <h1 class="llm-hero__title">从零学习大模型工程</h1>
+<section class="llm-hero llm-hero--book">
+  <div class="llm-hero__eyebrow">LLM Learning Roadmap</div>
+  <h1 class="llm-hero__title">LLM 从零到求职</h1>
   <p class="llm-hero__subtitle">
-    一份面向工程实践的开源学习笔记：从 Transformer 底层原理，到 HuggingFace、RAG、Agent、微调、推理部署和系统设计。
-    目标不是把概念堆满，而是把每个主题写到能理解、能运行、能复现。
+    一套面向机器学习基础学生的大模型学习笔记。主线不是 API 调用，而是从数据、Tokenizer、Transformer、
+    预训练、微调、RAG、Agent 到部署与面试准备，建立完整的知识闭环与项目闭环。
   </p>
   <div class="llm-hero__meta">
+    <span class="llm-pill">From Scratch</span>
     <span class="llm-pill">Transformer</span>
+    <span class="llm-pill">Finetuning</span>
     <span class="llm-pill">RAG</span>
     <span class="llm-pill">Agent</span>
-    <span class="llm-pill">Finetune</span>
-    <span class="llm-pill">Inference</span>
+    <span class="llm-pill">LLMOps</span>
+    <span class="llm-pill">Interview</span>
   </div>
 </section>
 
-!!! tip "学习建议"
-    建议按主线阅读，但不要只看文字。遇到公式、张量形状或代码片段时，最好自己跑一遍、改一改，再继续往后读。
-
-## 当前状态
-
-| 状态 | 含义 |
-|------|------|
-| 已展开 | 已经有较完整的解释、公式或代码 |
-| 进行中 | 有提纲或部分内容，后续会继续补充 |
-| 计划中 | 当前只是占位，路线可能调整 |
-
-## 学习路径
-
-```mermaid
-graph LR
-    A[01 Transformer 底层] --> B[02 HuggingFace 生态]
-    B --> C[03 RAG 系统]
-    B --> D[05 微调对齐]
-    B --> E[06 推理部署]
-    C --> F[04 Agent 开发]
-    C --> G[07 评测体系]
-    E --> G
-    F --> H[08 系统设计]
-    G --> H
-    H --> I[09 前沿追踪]
-```
-
-## 模块一览
-
-<div class="llm-card-grid">
-  <article class="llm-card">
-    <h3><a href="01-transformer/">01 · Transformer 精通</a></h3>
-    <p>Attention、位置编码、KV Cache、架构对比和 miniGPT，从底层机制一路写到可运行实现。</p>
-    <span class="llm-card__status">进行中</span>
+<div class="llm-highlight-grid">
+  <article class="llm-highlight">
+    <div class="llm-highlight__label">写作定位</div>
+    <p>面向已经具备机器学习基础、希望进入大模型相关方向的学生或初级工程师。</p>
   </article>
-  <article class="llm-card">
-    <h3><a href="02-huggingface/">02 · HuggingFace 生态</a></h3>
-    <p>Transformers、Datasets、PEFT 等常用工作流，面向应用和部署打基础。</p>
-    <span class="llm-card__status">计划中</span>
+  <article class="llm-highlight">
+    <div class="llm-highlight__label">学习目标</div>
+    <p>系统理解 LLM 全链路，并把学习过程沉淀成项目、README、博客与面试素材。</p>
   </article>
-  <article class="llm-card">
-    <h3><a href="03-rag/">03 · RAG 系统</a></h3>
-    <p>从文档切分、向量检索、混合搜索，到答案生成、评测和错误分析。</p>
-    <span class="llm-card__status">计划中</span>
-  </article>
-  <article class="llm-card">
-    <h3><a href="04-agent/">04 · Agent 开发</a></h3>
-    <p>Function Call、ReAct、MCP 和工具编排，把模型能力接入真实任务。</p>
-    <span class="llm-card__status">计划中</span>
-  </article>
-  <article class="llm-card">
-    <h3><a href="05-finetune/">05 · 微调与对齐</a></h3>
-    <p>LoRA、SFT、DPO 等训练流程，关注从实验到可复用工程管线。</p>
-    <span class="llm-card__status">计划中</span>
-  </article>
-  <article class="llm-card">
-    <h3><a href="06-inference/">06 · 推理部署</a></h3>
-    <p>vLLM、量化、压测、批处理和流式输出，围绕线上性能和成本展开。</p>
-    <span class="llm-card__status">计划中</span>
-  </article>
-  <article class="llm-card">
-    <h3><a href="07-evaluation/">07 · 评测体系</a></h3>
-    <p>LLM-as-Judge、Benchmark、回归测试和质量监控，让改动可比较。</p>
-    <span class="llm-card__status">计划中</span>
-  </article>
-  <article class="llm-card">
-    <h3><a href="08-system-design/">08 · 系统设计</a></h3>
-    <p>缓存、监控、灰度、链路追踪和系统边界，补上工程化最后一环。</p>
-    <span class="llm-card__status">计划中</span>
-  </article>
-  <article class="llm-card">
-    <h3><a href="09-frontier/">09 · 前沿追踪</a></h3>
-    <p>Reasoning、MoE、多模态和新模型架构，用工程视角跟进前沿。</p>
-    <span class="llm-card__status">计划中</span>
+  <article class="llm-highlight">
+    <div class="llm-highlight__label">主线参考</div>
+    <p>Stanford CS336、Hugging Face LLM Course、Raschka 的 From Scratch 主线组合学习。</p>
   </article>
 </div>
 
-## 写作路线
+## 学习主线
 
-当前会优先把 [01 · Transformer 精通](01-transformer/index.md) 打磨成样板章，再进入 HuggingFace 和 RAG。更细的更新计划见 [写作路线图](roadmap.md)。
+```text
+机器学习基础
+-> 深度学习基础
+-> NLP 与语言模型
+-> Attention 与 Transformer
+-> GPT / LLM from scratch
+-> Tokenizer 与预训练
+-> SFT / LoRA / RLHF / DPO
+-> Embedding / RAG / Agent
+-> LLMOps / 部署 / 面试
+```
 
-## 配套资源
+## 章节地图
 
-- **Notebooks**：计划放每章关键概念的可运行代码。
-- **Projects**：计划放端到端小项目，例如 miniGPT、RAG、Agent demo。
-- **问题讨论**：欢迎在 [GitHub Issues](https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/issues) 提问。
+<div class="llm-path-grid">
+  <article class="llm-path-card">
+    <h3>Part 0 · 学习路线与岗位定位</h3>
+    <p>第 0 章：大模型岗位地图与学习路线</p>
+  </article>
+  <article class="llm-path-card">
+    <h3>Part 1 · 基础补齐</h3>
+    <p>第 1 章：机器学习与深度学习最小必要基础</p>
+    <p>第 2 章：PyTorch 与训练循环</p>
+  </article>
+  <article class="llm-path-card">
+    <h3>Part 2 · NLP 与语言模型基础</h3>
+    <p>第 3 章：NLP 基础与文本表示</p>
+    <p>第 4 章：从 n-gram 到神经语言模型</p>
+  </article>
+  <article class="llm-path-card">
+    <h3>Part 3 · Transformer 核心</h3>
+    <p>第 5 章：Attention 机制</p>
+    <p>第 6 章：Transformer 架构</p>
+    <p>第 7 章：从零实现一个 Mini-GPT</p>
+  </article>
+  <article class="llm-path-card">
+    <h3>Part 4 · 现代 LLM 训练流程</h3>
+    <p>第 8 章：Tokenizer 与数据处理</p>
+    <p>第 9 章：预训练 Pretraining</p>
+    <p>第 10 章：Scaling Law 与大模型为什么变大</p>
+    <p>第 11 章：LLM 评估</p>
+  </article>
+  <article class="llm-path-card">
+    <h3>Part 5 · 后训练与微调</h3>
+    <p>第 12 章：SFT</p>
+    <p>第 13 章：LoRA / QLoRA / PEFT</p>
+    <p>第 14 章：RLHF / DPO / RLAIF</p>
+  </article>
+  <article class="llm-path-card">
+    <h3>Part 6 · LLM 应用工程</h3>
+    <p>第 15 章：Embedding、向量数据库与语义检索</p>
+    <p>第 16 章：RAG 从原理到项目</p>
+    <p>第 17 章：Agent 与 Tool Calling</p>
+    <p>第 18 章：LLMOps、部署与生产化</p>
+  </article>
+  <article class="llm-path-card">
+    <h3>Part 7 · 综合项目与求职准备</h3>
+    <p>附录 A：推荐项目路线</p>
+    <p>附录 B：每章统一写作模板</p>
+    <p>附录 C：推荐学习顺序</p>
+  </article>
+</div>
+
+## 项目路线
+
+<div class="llm-card-grid llm-card-grid--projects">
+  <article class="llm-card">
+    <h3>项目 1 · Mini-GPT from Scratch</h3>
+    <p>从零实现 decoder-only GPT，沉淀模型结构图、训练曲线、生成样例和实验分析。</p>
+  </article>
+  <article class="llm-card">
+    <h3>项目 2 · LoRA Fine-tuning 中文任务</h3>
+    <p>使用 Transformers、Datasets、PEFT 完成一个可展示的参数高效微调项目。</p>
+  </article>
+  <article class="llm-card">
+    <h3>项目 3 · Course Notes RAG Assistant</h3>
+    <p>做出一个可运行、可评估、可展示引用来源的课程资料问答系统。</p>
+  </article>
+  <article class="llm-card">
+    <h3>项目 4 · LLM Evaluation Benchmark</h3>
+    <p>自己设计 evaluation set、对比报告和 bad case analysis，补齐评估能力。</p>
+  </article>
+</div>
+
+## 适合怎么读
+
+!!! tip "建议阅读方式"
+    如果你是为了求职，推荐按照 Part 顺序推进，并且每学完一个阶段，都同步整理一份代码仓库、一页 README 和一组面试题复盘。
+
+## 当前说明
+
+- 仓库中的正文内容仍在从旧版模块式目录逐步迁移到新版 18 章主线。
+- 当前优先会先打磨 Transformer 和 Mini-GPT 相关内容，作为全书样板章。
+- 完整章节提纲、写作模板和推荐顺序见 [全书提纲与学习路线](roadmap.md)。
 
 ---
 
