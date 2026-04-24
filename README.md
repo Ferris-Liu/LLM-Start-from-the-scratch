@@ -129,21 +129,11 @@ then-language-generates-by-computer/
 └── requirements-docs.txt
 ```
 
-## 本地预览
-
-后续文档依赖请优先安装在 `daai-proj-env` 环境中，而不是 `base`。
-
-```bash
-conda run -n daai-proj-env python -m pip install -r requirements-docs.txt
-conda run -n daai-proj-env mkdocs serve
-```
-
 ## 当前状态
 
-- 站点标题已改为 `机器于此理解语言`
-- 副标题已改为 `一个AI炼丹师的大模型学习笔记`
-- 站点视觉正在向更克制的未来技术书风格收束
-- 正文字体已优先指定为 `LXGW WenKai / 霞鹜文楷`
+- 排版优化中
+- 第一章码字ing
+
 
 ## License
 
