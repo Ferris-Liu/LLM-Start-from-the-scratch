@@ -76,12 +76,12 @@ select {
 
 .md-content__inner {
   padding-top: 0.6rem;
-  max-width: 52rem;
+  max-width: 50rem;
   margin: 0 auto;
 }
 
 .md-content__inner:has(.llm-hero--book) {
-  max-width: 70rem;
+  max-width: 64rem;
 }
 
 @media screen and (min-width: 76.25em) {
@@ -116,11 +116,11 @@ select {
   }
 
   .md-content__inner {
-    max-width: 64rem;
+    max-width: 52rem;
   }
 
   .md-content__inner:has(.llm-hero--book) {
-    max-width: 72rem;
+    max-width: 66rem;
   }
 }
 
@@ -203,8 +203,8 @@ select {
 
 .md-typeset {
   color: var(--llm-text);
-  font-size: 1.10rem;
-  line-height: 2;
+  font-size: 1.04rem;
+  line-height: 1.95;
   letter-spacing: 0;
 }
 
@@ -558,7 +558,7 @@ select {
 
 @media screen and (max-width: 44.9375em) {
   .md-typeset {
-    font-size: 0.92rem;
+    font-size: 0.98rem;
   }
 
   .md-main__inner {
