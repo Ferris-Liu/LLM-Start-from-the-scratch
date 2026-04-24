@@ -76,7 +76,7 @@ select {
 
 .md-content__inner {
   padding-top: 0.6rem;
-  max-width: 64rem;
+  max-width: 52rem;
   margin: 0 auto;
 }
 
@@ -203,7 +203,7 @@ select {
 
 .md-typeset {
   color: var(--llm-text);
-  font-size: 1.20rem;
+  font-size: 1.10rem;
   line-height: 2;
   letter-spacing: 0;
 }
