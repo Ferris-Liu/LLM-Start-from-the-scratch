@@ -1,33 +1,34 @@
 <section class="llm-hero llm-hero--book">
-  <div class="llm-hero__eyebrow">LLM Learning Roadmap</div>
-  <h1 class="llm-hero__title">LLM 从零到求职</h1>
+  <div class="llm-hero__eyebrow">Then Language Generates By Computer</div>
+  <h1 class="llm-hero__title">机器于此理解语言</h1>
   <p class="llm-hero__subtitle">
-    一套面向机器学习基础学生的大模型学习笔记。主线不是 API 调用，而是从数据、Tokenizer、Transformer、
-    预训练、微调、RAG、Agent 到部署与面试准备，建立完整的知识闭环与项目闭环。
+    一个AI炼丹师的大模型学习笔记。
+    从语言模型的底层结构，到训练、微调、RAG、Agent 与部署实践，
+    把抽象理论压进可运行的实验、项目与长期写作里。
   </p>
   <div class="llm-hero__meta">
-    <span class="llm-pill">From Scratch</span>
+    <span class="llm-pill">AI Alchemist</span>
     <span class="llm-pill">Transformer</span>
+    <span class="llm-pill">Pretraining</span>
     <span class="llm-pill">Finetuning</span>
     <span class="llm-pill">RAG</span>
     <span class="llm-pill">Agent</span>
     <span class="llm-pill">LLMOps</span>
-    <span class="llm-pill">Interview</span>
   </div>
 </section>
 
 <div class="llm-highlight-grid">
   <article class="llm-highlight">
     <div class="llm-highlight__label">写作定位</div>
-    <p>面向已经具备机器学习基础、希望进入大模型相关方向的学生或初级工程师。</p>
+    <p>面向希望真正理解语言模型内部机制，而不只停留在工具调用层的学习者。</p>
   </article>
   <article class="llm-highlight">
     <div class="llm-highlight__label">学习目标</div>
-    <p>系统理解 LLM 全链路，并把学习过程沉淀成项目、README、博客与面试素材。</p>
+    <p>把 LLM 的训练链路、应用链路与工程链路串成一条能复现、能解释、能展示的主线。</p>
   </article>
   <article class="llm-highlight">
     <div class="llm-highlight__label">主线参考</div>
-    <p>Stanford CS336、Hugging Face LLM Course、Raschka 的 From Scratch 主线组合学习。</p>
+    <p>以 from-scratch 视角组织 CS336、Hugging Face LLM Course 与真实项目实践。</p>
   </article>
 </div>
 
@@ -120,7 +121,7 @@
 ## 适合怎么读
 
 !!! tip "建议阅读方式"
-    如果你是为了求职，推荐按照 Part 顺序推进，并且每学完一个阶段，都同步整理一份代码仓库、一页 README 和一组面试题复盘。
+    推荐按 Part 顺序推进。每学完一个阶段，就同步整理代码实验、笔记、README 和一轮复盘，这样知识才会真正沉淀。
 
 ## 当前说明
 

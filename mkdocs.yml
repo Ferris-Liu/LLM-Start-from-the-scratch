@@ -1,27 +1,27 @@
-site_name: LLM 从零到求职
+site_name: 机器于此理解语言
 site_url: https://ferris-liu.github.io/LLM-Start-from-the-scratch/
-site_description: 面向机器学习基础学生的大模型学习笔记，从 Transformer、预训练、微调到 RAG、Agent、部署与求职准备。
+site_description: 一个AI炼丹师的大模型学习笔记，从 Transformer、预训练、微调到 RAG、Agent 与部署实践。
 site_author: FerrisLIU
 repo_url: https://github.com/Ferris-Liu/LLM-Start-from-the-scratch
-repo_name: Ferris-Liu/LLM-Start-from-the-scratch
+repo_name: then-language-generates-by-computer
 edit_uri: edit/main/docs/
 
 theme:
   name: material
   language: zh
   palette:
-    - scheme: default
-      primary: black
-      accent: deep purple
-      toggle:
-        icon: material/weather-night
-        name: 切换到深色模式
     - scheme: slate
       primary: black
-      accent: deep purple
+      accent: cyan
       toggle:
         icon: material/weather-sunny
         name: 切换到浅色模式
+    - scheme: default
+      primary: black
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: 切换到深色模式
   features:
     - navigation.sections
     - navigation.indexes
