@@ -34,7 +34,6 @@ theme:
     - content.code.annotate
     - content.action.edit
     - toc.follow
-    - toc.integrate
 
 markdown_extensions:
   - admonition
