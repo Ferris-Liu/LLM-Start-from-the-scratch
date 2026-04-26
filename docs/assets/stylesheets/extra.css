@@ -86,33 +86,28 @@ select {
 
 @media screen and (min-width: 76.25em) {
   .md-grid {
-    max-width: 100%;
+    max-width: 88rem;
   }
 
   .md-main__inner {
-    position: relative;
-    display: block;
     max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
   }
 
   .md-sidebar--primary {
-    position: fixed;
-    left: 1.6rem;
-    top: 6.8rem;
-    width: 12rem;
-    max-height: calc(100vh - 8rem);
-    overflow: auto;
-    padding-right: 0.4rem;
+    position: sticky;
+    top: 5.8rem;
+    width: 15rem;
+    max-height: calc(100vh - 6.6rem);
+    padding-right: 1rem;
   }
 
   .md-sidebar--secondary {
     display: none;
   }
 
-  .md-content {
-    margin: 0 auto;
+  .md-main__inner > .md-content {
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .md-content__inner {
