@@ -165,9 +165,9 @@ $$
 
 其中：
 
-- `x_i` 是第 `i` 个 token id
+- \( x_i \) 是第 \( i \) 个 token id
 - `E` 是 embedding matrix
-- `e_i` 是该 token 的向量表示
+- \( e_i \) 是该 token 的向量表示
 
 可以把它理解成：
 
@@ -190,7 +190,7 @@ $$
 h_i^{(0)} = e_i + p_i
 $$
 
-其中 `p_i` 表示第 `i` 个位置的向量。
+其中 \( p_i \) 表示第 \( i \) 个位置的向量。
 
 这一层负责回答：
 
@@ -227,7 +227,7 @@ $$
 \text{MultiHead}(X) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)W_O
 $$
 
-其中每个 `head` 都有自己的一组 `W_Q, W_K, W_V`。
+其中每个 `head` 都有自己的一组 \( W_Q, W_K, W_V \)。
 
 ### 4.4 Feed-Forward Network
 
@@ -243,7 +243,7 @@ $$
 \text{FFN}(x) = W_2 \sigma(W_1 x + b_1) + b_2
 $$
 
-这里的激活函数 `\sigma` 可能是 ReLU、GELU 等。
+这里的激活函数 \( \sigma \) 可能是 ReLU、GELU 等。
 
 它的主要作用不是建模序列关系，而是：
 
@@ -306,7 +306,7 @@ Transformer 中另一个关键零件是 LayerNorm。
 
 ### 5.1 输入表示
 
-设输入序列长度为 `T`，隐藏维度为 `d_model`。
+设输入序列长度为 \( T \)，隐藏维度为 \( d_{model} \)。
 
 输入 token ids 先经过 embedding，得到：
 
@@ -518,12 +518,12 @@ GPT 的核心训练目标是：
 
 **给定前文，预测下一个 token。**
 
-这要求模型在第 `t` 个位置只能看：
+这要求模型在第 \( t \) 个位置只能看：
 
-- `x_1`
-- `x_2`
+- \( x_1 \)
+- \( x_2 \)
 - ...
-- `x_{t-1}`
+- \( x_{t-1} \)
 
 而 decoder-only + causal mask 恰好就是为这种约束设计的。
 

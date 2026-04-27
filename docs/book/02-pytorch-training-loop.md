@@ -49,7 +49,7 @@ PyTorch 不是在发明新的训练逻辑，它只是把第 1 章里的抽象概
 - 数据样本，对应 Dataset 里的单条样本
 - 一批样本，对应 DataLoader 产出的一个 batch
 - 模型，对应一个 `nn.Module`
-- 参数 `\theta`，对应 `model.parameters()`
+- 参数 \( \theta \)，对应 `model.parameters()`
 - 预测结果，对应 forward 的输出
 - loss，对应一个标量 Tensor
 - 梯度，对应参数上的 `.grad`

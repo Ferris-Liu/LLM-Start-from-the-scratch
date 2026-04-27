@@ -46,7 +46,7 @@
 - 能用自己的话解释 Attention 为什么会出现
 - 能理解 query、key、value 分别在做什么
 - 能写出 scaled dot-product attention 的核心公式
-- 能解释为什么要除以 `sqrt(d_k)`
+- 能解释为什么要除以 \( \sqrt{d_k} \)
 - 能区分 self-attention、cross-attention 和 causal self-attention
 - 能理解 multi-head attention 为什么有用
 - 能看懂 GPT 里 attention 模块的最小实现
@@ -136,7 +136,7 @@ $$
 
 ### 4.2 注意力分数怎么来
 
-对于当前位置的 query `q_i` 和所有位置的 key `k_j`，先计算相似度：
+对于当前位置的 query \( q_i \) 和所有位置的 key \( k_j \)，先计算相似度：
 
 $$
 s_{ij} = q_i k_j^T
@@ -152,9 +152,9 @@ $$
 
 **序列中每个位置，对其他所有位置的关注分数。**
 
-### 4.3 为什么要除以 `sqrt(d_k)`
+### 4.3 为什么要除以 \( \sqrt{d_k} \)
 
-如果 key 的维度是 `d_k`，那么标准写法是：
+如果 key 的维度是 \( d_k \)，那么标准写法是：
 
 $$
 \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
@@ -168,7 +168,7 @@ $$
 - 其他位置几乎变成 0
 - 梯度不稳定，训练更难
 
-所以除以 `sqrt(d_k)` 的作用可以简单理解成：
+所以除以 \( \sqrt{d_k} \) 的作用可以简单理解成：
 
 **把分数的尺度控制在更稳定的范围里。**
 
@@ -180,7 +180,7 @@ $$
 A = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)
 $$
 
-这里的 `A_{ij}` 可以理解为：
+这里的 \( A_{ij} \) 可以理解为：
 
 **当第 `i` 个位置更新自己时，它应该从第 `j` 个位置拿多少信息。**
 
@@ -198,7 +198,7 @@ $$
 
 ### 5.1 第一步：输入序列先变成向量
 
-设输入序列长度为 `T`，每个 token 的隐藏维度是 `d_model`。
+设输入序列长度为 \( T \)，每个 token 的隐藏维度是 \( d_{model} \)。
 
 那么输入张量形状通常是：
 
@@ -208,9 +208,9 @@ $$
 
 经过三组线性层后得到：
 
-- `Q`: `T x d_k`
-- `K`: `T x d_k`
-- `V`: `T x d_v`
+- \( Q \)：\( T \times d_k \)
+- \( K \)：\( T \times d_k \)
+- \( V \)：\( T \times d_v \)
 
 ### 5.2 第二步：算每个位置对所有位置的相关性
 
@@ -315,7 +315,7 @@ GPT 做的是 next-token prediction。
 Multi-Head Attention 的做法是：
 
 - 把隐藏维度切成多个头
-- 每个头各自学习一套 `W_Q, W_K, W_V`
+- 每个头各自学习一套 \( W_Q, W_K, W_V \)
 - 每个头独立做 attention
 - 最后把多个头拼接起来，再做一次线性变换
 
@@ -416,9 +416,9 @@ attention map 有时能提供一定直觉，但“权重高”不一定等于“
 
 因为它允许每个位置在计算自己表示时，动态访问整段上下文，而不是把所有历史信息提前压缩成一个固定向量。这样模型更容易捕捉长距离依赖，也能更灵活地区分哪些上下文更重要。
 
-### Q2：为什么 scaled dot-product attention 里要除以 `sqrt(d_k)`？
+### Q2：为什么 scaled dot-product attention 里要除以 \( \sqrt{d_k} \)？
 
-因为点积的方差会随着维度增大而变大，直接送进 softmax 会让分布过于尖锐，导致梯度不稳定。除以 `sqrt(d_k)` 可以让数值尺度更平稳。
+因为点积的方差会随着维度增大而变大，直接送进 softmax 会让分布过于尖锐，导致梯度不稳定。除以 \( \sqrt{d_k} \) 可以让数值尺度更平稳。
 
 ### Q3：self-attention 和 cross-attention 的区别是什么？
 
