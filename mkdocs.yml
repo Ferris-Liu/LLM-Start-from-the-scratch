@@ -87,12 +87,14 @@ nav:
   - 首页: index.md
   - 作者介绍: about-author.md
   - 前言: preface.md
+  - 如何阅读这本书: how-to-read.md
   - 全书提纲与学习路线: roadmap.md
-  - 前沿技术观察:
-    - 技术条目池: frontier/frontier_tech.md
-    - 分析报告索引: frontier/frontier_reports.md
-    - DeepSeek-V4 技术分析报告: frontier/reports/deepseek-v4.md
-    - 通用报告模板: frontier/_report_template.md
+  - 从这里开始:
+    - 初学者入口: book/01-ml-dl-basics.md
+    - Transformer 入口: book/05-attention.md
+    - Mini-GPT 入口: book/07-mini-gpt.md
+    - 应用入口：RAG: book/16-rag.md
+    - 应用入口：Agent: book/17-agent-tool-calling.md
   - 全书导航:
     - 概览: book/index.md
   - Part 0 · 学习路线与岗位定位:
@@ -121,3 +123,8 @@ nav:
     - 第 16 章：RAG 从原理到项目: book/16-rag.md
     - 第 17 章：Agent 与 Tool Calling: book/17-agent-tool-calling.md
     - 第 18 章：LLMOps、部署与生产化: book/18-llmops-deployment.md
+  - 前沿技术观察:
+    - 技术条目池: frontier/frontier_tech.md
+    - 分析报告索引: frontier/frontier_reports.md
+    - DeepSeek-V4 技术分析报告: frontier/reports/deepseek-v4.md
+    - 通用报告模板: frontier/_report_template.md

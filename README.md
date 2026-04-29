@@ -5,27 +5,60 @@
 [![Deploy Docs](https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/actions/workflows/deploy.yml/badge.svg)](https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-在线阅读：[ferris-liu.github.io/LLM-Start-from-the-scratch](https://ferris-liu.github.io/LLM-Start-from-the-scratch)
+这是一个面向中文读者的 LLM 学习入口：从机器学习基础、Transformer、Mini-GPT，到预训练、微调、RAG、Agent 和部署，尽量把每一章都写到能理解、能运行、能复现。
 
+在线阅读：[Docs](https://ferris-liu.github.io/LLM-Start-from-the-scratch)  
 仓库展示名：`then-language-generates-by-computer`
 
 ---
 
-## 这本笔记在写什么
+## 你能在这里得到什么
 
-这不是一份停留在 API 调用层的速成手册，而是一条从语言模型底层结构一路走到工程实践的学习主线。
+如果你跟着这份笔记往下走，目标是同时获得三样东西：
 
-主线大致是：
+- 系统理解 LLM 全链路
+- 每章都看到公式、代码、实验
+- 最终沉淀成可展示的项目与技术表达
 
-`数据 -> Tokenizer -> Transformer -> 预训练 -> 微调 -> RAG -> Agent -> LLMOps / 部署`
+## Start Here
 
-我希望把每一章都写成三件事同时成立：
+| 入口 | 适合谁 | 去哪里 |
+|------|--------|--------|
+| 在线首页 | 想先看整体风格和目录结构 | [Docs](docs/index.md) |
+| 新读者入口 | 第一次来，不知道从哪里开始 | [如何阅读这本书](docs/how-to-read.md) |
+| Transformer 入口 | 想直接进入核心原理 | [Attention 机制](docs/book/05-attention.md) |
+| 项目入口 | 想先看 from-scratch 项目感内容 | [从零实现一个 Mini-GPT](docs/book/07-mini-gpt.md) |
+| 全书地图 | 想先浏览章节规划和路线 | [路线图](docs/roadmap.md) |
 
-- 能建立直觉
-- 能看到公式和代码
-- 能沉淀成可复现的实验与项目
+## 为什么值得收藏
 
-## 写作定位
+- 不是只讲 API 调用，而是从底层原理一路写到工程实践
+- 内容按长期学习主线组织，适合反复回看
+- 目标不是“学过”，而是把知识沉淀成代码、项目和表达能力
+
+## 当前进度
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| 第 1 章：基础补齐 | 已具备较完整正文 | 可直接阅读，继续打磨中 |
+| Transformer / Mini-GPT | 优先推进 | 作为全书样板章重点完善 |
+| 预训练 / 微调 / RAG / Agent / 部署 | 持续补齐中 | 按主线逐步展开 |
+
+## 学习路线图
+
+```mermaid
+flowchart LR
+    A["机器学习基础"] --> B["深度学习基础"]
+    B --> C["NLP 与语言模型"]
+    C --> D["Attention 与 Transformer"]
+    D --> E["GPT / LLM from scratch"]
+    E --> F["Tokenizer 与预训练"]
+    F --> G["微调与对齐"]
+    G --> H["RAG 与 Agent"]
+    H --> I["LLMOps / 部署"]
+```
+
+## 适合谁
 
 这套笔记面向希望真正理解语言模型内部机制，而不只停留在工具调用层的学习者。
 
@@ -35,6 +68,23 @@
 - 预训练到底在学什么
 - 微调、RAG、Agent 分别解决什么问题
 - 一个大模型项目怎样从原理走到工程落地
+
+## 推荐入口
+
+### 如果你是初学者
+
+- [第 1 章：机器学习与深度学习最小必要基础](docs/book/01-ml-dl-basics.md)
+- [如何阅读这本书](docs/how-to-read.md)
+
+### 如果你想先看核心内容
+
+- [第 5 章：Attention 机制](docs/book/05-attention.md)
+- [第 7 章：从零实现一个 Mini-GPT](docs/book/07-mini-gpt.md)
+
+### 如果你想先看应用链路
+
+- [第 16 章：RAG 从原理到项目](docs/book/16-rag.md)
+- [第 17 章：Agent 与 Tool Calling](docs/book/17-agent-tool-calling.md)
 
 ## 主线参考
 
@@ -110,6 +160,17 @@
 - 实验记录
 - 博客或复盘材料
 
+## 为什么值得收藏
+
+这个仓库适合作为一个长期跟读的中文 LLM 学习入口：
+
+- 持续更新，不是一次性写完的静态笔记
+- 主线清晰，从底层原理一路到工程实践
+- 每章尽量配代码、公式和项目化输出
+- 适合收藏后反复回看，而不是看完即走
+
+如果这些方向正好也是你要补的，那欢迎把它加入收藏夹或点个 star。
+
 ## 仓库结构
 
 ```text
@@ -117,6 +178,9 @@ then-language-generates-by-computer/
 ├── README.md
 ├── docs/
 │   ├── index.md
+│   ├── about-author.md
+│   ├── preface.md
+│   ├── how-to-read.md
 │   ├── roadmap.md
 │   ├── book/
 │   │   ├── index.md
@@ -131,9 +195,9 @@ then-language-generates-by-computer/
 
 ## 当前状态
 
-- 排版优化中
-- 第一章码字ing
-
+- 视觉和阅读体验持续打磨中
+- 第 1 章已具备较完整正文
+- Transformer / Mini-GPT 相关章节优先作为样板章推进
 
 ## License
 

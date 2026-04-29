@@ -32,6 +32,23 @@
   </article>
 </div>
 
+## 开始阅读
+
+<div class="llm-card-grid llm-card-grid--entry">
+  <article class="llm-card">
+    <h3><a href="book/01-ml-dl-basics/">如果你是初学者</a></h3>
+    <p>先把训练闭环、损失函数、梯度、优化器这些地基补稳，再进入大模型主线。</p>
+  </article>
+  <article class="llm-card">
+    <h3><a href="book/05-attention/">如果你想直进 Transformer</a></h3>
+    <p>从 Attention 开始，抓住语言模型最核心的结构直觉与计算方式。</p>
+  </article>
+  <article class="llm-card">
+    <h3><a href="roadmap/">如果你想先看全书地图</a></h3>
+    <p>先浏览整条学习路线、章节安排和项目路线，再决定自己的阅读顺序。</p>
+  </article>
+</div>
+
 ## 学习主线
 
 ```text
@@ -115,6 +132,19 @@
   <article class="llm-card">
     <h3>项目 4 · LLM Evaluation Benchmark</h3>
     <p>自己设计 evaluation set、对比报告和 bad case analysis，补齐评估能力。</p>
+  </article>
+</div>
+
+## 推荐先读
+
+<div class="llm-card-grid llm-card-grid--featured">
+  <article class="llm-card">
+    <h3><a href="book/05-attention/">样板章 · Attention 机制</a></h3>
+    <p>适合快速判断这本笔记是否合你胃口：原理、公式、代码表达会集中体现在这里。</p>
+  </article>
+  <article class="llm-card">
+    <h3><a href="book/07-mini-gpt/">样板章 · 从零实现一个 Mini-GPT</a></h3>
+    <p>如果你偏爱 from-scratch 学习法，这一章会是全书最能体现项目感的入口。</p>
   </article>
 </div>
 
