@@ -40,6 +40,30 @@
 
 ## 已收录条目
 
+### 技术名：DeepSeek-V4
+
+- **类型**：Model / MoE / Long-Context / Reasoning / Agent
+- **发布时间 / 来源**：2026 年 4 月 24 日技术报告；[Hugging Face 模型集合](https://huggingface.co/collections/deepseek-ai/deepseek-v4)
+- **原理概述**：
+  - DeepSeek-V4 系列包含 V4-Pro 与 V4-Flash，二者均原生支持 1M token 上下文。
+  - 核心架构采用 CSA（Compressed Sparse Attention）与 HCA（Heavily Compressed Attention）的混合注意力，用压缩 KV、稀疏选择和滑动窗口分支降低长上下文成本。
+  - 同时引入 mHC、Muon optimizer、FP4 量化感知训练、异构 KV Cache 与 on-disk cache 等训练和推理基础设施。
+- **典型应用 / Demo**：
+  - 百万 token 长文档分析
+  - 长程 Agent 工作流
+  - 代码库级理解与代码 Agent
+  - 复杂推理任务中的 test-time scaling
+- **对应章节**：
+  - 第 5 章 Attention 机制
+  - 第 6 章 Transformer 架构
+  - 第 17 章 Agent 与 Tool Calling
+  - 第 18 章 LLMOps、部署与生产化
+- **笔记状态**：
+  - 写完分析报告初版：[DeepSeek-V4 技术分析报告](reports/deepseek-v4.md)
+- **备注**：
+  - 初学者重点理解：百万上下文的瓶颈是 attention FLOPs 与 KV Cache，而不只是窗口长度。
+  - 后续适合把 CSA/HCA、KV Cache 成本和长上下文 Agent 案例分别回写到主章节。
+
 ### 技术名：OpenClaw
 
 - **类型**：LLM Skill / Tool
@@ -86,6 +110,7 @@
 
 | 技术名称 | 类型 | 对应章节 | 笔记状态 | 来源 / 链接 |
 |----------|------|----------|----------|-------------|
+| DeepSeek-V4 | MoE / Long-Context / Reasoning | 5 Attention、6 Transformer、17 Agent、18 LLMOps | 写完分析报告初版 | Hugging Face / 技术报告 |
 | OpenClaw | Skill / Tool | 17 Agent | TODO | GitHub/OpenClaw |
 | Hermes Agent | Multi-agent | 17 Agent | TODO | GitHub/Hermes |
 

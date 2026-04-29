@@ -91,6 +91,7 @@ nav:
   - 前沿技术观察:
     - 技术条目池: frontier/frontier_tech.md
     - 分析报告索引: frontier/frontier_reports.md
+    - DeepSeek-V4 技术分析报告: frontier/reports/deepseek-v4.md
     - 通用报告模板: frontier/_report_template.md
   - 全书导航:
     - 概览: book/index.md
