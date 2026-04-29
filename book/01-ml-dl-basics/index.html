@@ -1,0 +1,4493 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="一个AI炼丹师的大模型学习笔记，从 Transformer、预训练、微调到 RAG、Agent 与部署实践。">
+      
+      
+        <meta name="author" content="FerrisLIU">
+      
+      
+        <link rel="canonical" href="https://ferris-liu.github.io/LLM-Start-from-the-scratch/book/01-ml-dl-basics/">
+      
+      
+        <link rel="prev" href="../00-role-roadmap/">
+      
+      
+        <link rel="next" href="../02-pytorch-training-loop/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>初学者入口 - 机器于此理解语言</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#1" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="机器于此理解语言" class="md-header__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器于此理解语言
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              初学者入口
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到浅色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换到浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换到深色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="机器于此理解语言" class="md-nav__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器于此理解语言
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about-author/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    作者介绍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前言
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何阅读这本书
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书提纲与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    从这里开始
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    从这里开始
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        本章定位
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 为什么学 LLM 之前要先补这些基础
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 监督学习的最小闭环
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 监督学习的最小闭环">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个二分类直觉例子
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 从分类问题到下一个 token 预测
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 从分类问题到下一个 token 预测">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        普通分类任务
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        语言模型任务
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Loss：模型到底哪里做错了
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Loss：模型到底哪里做错了">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么需要损失函数
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-entropy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        语言模型里最常见的损失：Cross Entropy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么要取负对数
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-entropy-nll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross Entropy 和 NLL 的关系
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 梯度下降：知道错了以后怎么改
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 梯度下降：知道错了以后怎么改">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参数更新的目标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个山坡类比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-forwardbackwardgradient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Forward、Backward、Gradient 分别在做什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Forward、Backward、Gradient 分别在做什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Forward
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-backward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Backward
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-gradient-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Gradient / Step
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-sgdadamadamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 常见优化器：SGD、Adam、AdamW
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. 常见优化器：SGD、Adam、AdamW">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sgd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SGD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adam" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adam
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AdamW
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 过拟合与泛化：训练 loss 降了不代表真的更好了
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 过拟合与泛化：训练 loss 降了不代表真的更好了">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        什么是泛化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        什么是过拟合
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个常见信号
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么 LLM 里也一样重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-weight-decayearly-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 常见应对手段：正则化、Weight Decay、Early Stopping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 常见应对手段：正则化、Weight Decay、Early Stopping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        正则化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weight-decay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weight Decay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#early-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Early Stopping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 用一张流程图串起训练闭环
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-pytorch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 一个最小 PyTorch 例子
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. 一个最小 PyTorch 例子">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        这段代码里发生了什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. 把这个例子映射到语言模型训练
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. 把这个例子映射到语言模型训练">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        普通分类
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        语言模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：loss 降了就说明模型一定更好了
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：反向传播就是“模型自己知道答案了”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：优化器只是调参细节，不重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 4：大模型训练和普通分类任务完全不是一回事
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：监督学习的基本训练流程是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-cross-entropy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：为什么语言模型训练常用 Cross Entropy？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3lossbackward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：loss.backward() 做了什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4adam-adamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：Adam 和 AdamW 的区别可以怎么解释？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：为什么不能只看训练集指标？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书导航
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    全书导航
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-role-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 0 章：大模型岗位地图与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 1 · 基础补齐
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 1 · 基础补齐
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        本章定位
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 为什么学 LLM 之前要先补这些基础
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 监督学习的最小闭环
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 监督学习的最小闭环">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个二分类直觉例子
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 从分类问题到下一个 token 预测
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 从分类问题到下一个 token 预测">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        普通分类任务
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        语言模型任务
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Loss：模型到底哪里做错了
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Loss：模型到底哪里做错了">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么需要损失函数
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-entropy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        语言模型里最常见的损失：Cross Entropy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么要取负对数
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-entropy-nll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross Entropy 和 NLL 的关系
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 梯度下降：知道错了以后怎么改
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 梯度下降：知道错了以后怎么改">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参数更新的目标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个山坡类比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-forwardbackwardgradient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Forward、Backward、Gradient 分别在做什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Forward、Backward、Gradient 分别在做什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Forward
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-backward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Backward
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-gradient-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Gradient / Step
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-sgdadamadamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 常见优化器：SGD、Adam、AdamW
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. 常见优化器：SGD、Adam、AdamW">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sgd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SGD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adam" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adam
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AdamW
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 过拟合与泛化：训练 loss 降了不代表真的更好了
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 过拟合与泛化：训练 loss 降了不代表真的更好了">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        什么是泛化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        什么是过拟合
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个常见信号
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么 LLM 里也一样重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-weight-decayearly-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 常见应对手段：正则化、Weight Decay、Early Stopping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 常见应对手段：正则化、Weight Decay、Early Stopping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        正则化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weight-decay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weight Decay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#early-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Early Stopping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 用一张流程图串起训练闭环
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-pytorch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 一个最小 PyTorch 例子
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. 一个最小 PyTorch 例子">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        这段代码里发生了什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. 把这个例子映射到语言模型训练
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. 把这个例子映射到语言模型训练">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        普通分类
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        语言模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：loss 降了就说明模型一定更好了
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：反向传播就是“模型自己知道答案了”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：优化器只是调参细节，不重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 4：大模型训练和普通分类任务完全不是一回事
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：监督学习的基本训练流程是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-cross-entropy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：为什么语言模型训练常用 Cross Entropy？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3lossbackward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：loss.backward() 做了什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4adam-adamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：Adam 和 AdamW 的区别可以怎么解释？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：为什么不能只看训练集指标？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pytorch-training-loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 2 章：PyTorch 与训练循环
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-nlp-text-representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 3 章：NLP 基础与文本表示
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-ngram-to-neural-lm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章：从 n-gram 到神经语言模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 3 · Transformer 核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 3 · Transformer 核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-transformer-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章：Transformer 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-tokenizer-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章：Tokenizer 与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-pretraining/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 9 章：预训练 Pretraining
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-scaling-law/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 10 章：Scaling Law 与大模型为什么变大
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 11 章：LLM 评估
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 5 · 后训练与微调
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 5 · 后训练与微调
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-sft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 12 章：Supervised Fine-Tuning，SFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-lora-qlora-peft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 13 章：参数高效微调：LoRA / QLoRA / PEFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 14 章：偏好对齐：RLHF / DPO / RLAIF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 6 · LLM 应用工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 6 · LLM 应用工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-embedding-retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 15 章：Embedding、向量数据库与语义检索
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-llmops-deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 18 章：LLMOps、部署与生产化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前沿技术观察
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    前沿技术观察
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_tech/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术条目池
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    分析报告索引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/reports/deepseek-v4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek-V4 技术分析报告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/_report_template/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通用报告模板
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        本章定位
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 为什么学 LLM 之前要先补这些基础
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 监督学习的最小闭环
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 监督学习的最小闭环">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个二分类直觉例子
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 从分类问题到下一个 token 预测
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 从分类问题到下一个 token 预测">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        普通分类任务
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        语言模型任务
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Loss：模型到底哪里做错了
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Loss：模型到底哪里做错了">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么需要损失函数
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-entropy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        语言模型里最常见的损失：Cross Entropy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么要取负对数
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-entropy-nll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross Entropy 和 NLL 的关系
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 梯度下降：知道错了以后怎么改
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 梯度下降：知道错了以后怎么改">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参数更新的目标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个山坡类比
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-forwardbackwardgradient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Forward、Backward、Gradient 分别在做什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Forward、Backward、Gradient 分别在做什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Forward
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-backward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Backward
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-gradient-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Gradient / Step
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-sgdadamadamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 常见优化器：SGD、Adam、AdamW
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. 常见优化器：SGD、Adam、AdamW">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sgd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SGD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adam" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adam
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AdamW
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 过拟合与泛化：训练 loss 降了不代表真的更好了
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 过拟合与泛化：训练 loss 降了不代表真的更好了">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        什么是泛化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        什么是过拟合
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个常见信号
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么 LLM 里也一样重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-weight-decayearly-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 常见应对手段：正则化、Weight Decay、Early Stopping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 常见应对手段：正则化、Weight Decay、Early Stopping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        正则化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weight-decay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weight Decay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#early-stopping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Early Stopping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 用一张流程图串起训练闭环
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-pytorch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 一个最小 PyTorch 例子
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. 一个最小 PyTorch 例子">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        这段代码里发生了什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. 把这个例子映射到语言模型训练
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. 把这个例子映射到语言模型训练">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        普通分类
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        语言模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：loss 降了就说明模型一定更好了
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：反向传播就是“模型自己知道答案了”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：优化器只是调参细节，不重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 4：大模型训练和普通分类任务完全不是一回事
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：监督学习的基本训练流程是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-cross-entropy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：为什么语言模型训练常用 Cross Entropy？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3lossbackward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：loss.backward() 做了什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4adam-adamw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：Adam 和 AdamW 的区别可以怎么解释？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：为什么不能只看训练集指标？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/edit/main/docs/book/01-ml-dl-basics.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="1">第 1 章：机器学习与深度学习最小必要基础<a class="headerlink" href="#1" title="Permanent link">&para;</a></h1>
+<h2 id="_1">本章定位<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>如果你问一个LLM从业者如何学习大模型，你得到的答案肯定是直接看 Transformer、RAG、Agent 或微调框架吧啦吧啦，最好看原汁原味的英文论文，嘿这才叫一个地道儿。</p>
+<p>这当然没问题，前提是你有厚实的机器学习基础，但如果底层这几个概念不够稳，后面很容易出现一种状态：</p>
+<ul>
+<li>内容完全不进脑子，不一会就被各种各样的概念搞晕，自注意力什么？自什么回归？什么注意力回归？</li>
+<li>代码能跑，但不知道为什么这样写</li>
+<li>知道 <code>loss.backward()</code> 要调用，但不清楚它到底做了什么</li>
+<li>会用 AdamW，但说不清它和 SGD 的区别</li>
+<li>看到训练集 loss 在降很开心，却不知道模型可能已经过拟合</li>
+</ul>
+<p>所以这一章不追求完整的概念，而是只做一件事：</p>
+<p>这么多不同的机器学习任务，本质都是在做一件事儿：</p>
+<p><code>数据 -&gt; 模型 -&gt; 预测 -&gt; loss -&gt; 梯度 -&gt; 参数更新 -&gt; 验证</code></p>
+<p>如果这一章吃透，后面你会发现很多“新东西”其实只是这条链路在更大规模上的重复。</p>
+<h2 id="_2">你学完后应该会什么<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>能用自己的话解释监督学习的基本训练流程</li>
+<li>能理解为什么语言模型训练本质上也是一个分类问题</li>
+<li>能看懂 Cross Entropy、梯度下降、反向传播的最小公式</li>
+<li>能区分 SGD、Adam、AdamW 的核心直觉</li>
+<li>能理解过拟合、泛化、验证集、Early Stopping 的作用</li>
+<li>能看懂一个最小的 PyTorch 训练例子</li>
+</ul>
+<h2 id="1-llm">1. 为什么学 LLM 之前要先补这些基础<a class="headerlink" href="#1-llm" title="Permanent link">&para;</a></h2>
+<p>从表面上看，大模型领域有很多新名词：</p>
+<ul>
+<li>Prompt Engineering</li>
+<li>RAG</li>
+<li>LoRA</li>
+<li>RLHF</li>
+<li>Agent</li>
+<li>Tool Calling</li>
+</ul>
+<p>但如果往下拆，你会发现只要涉及训练、微调、评估，最后都会回到几个最基本的问题：</p>
+<ul>
+<li>模型输入是什么</li>
+<li>模型输出是什么</li>
+<li>我们如何定义“预测得好不好”</li>
+<li>如果预测不好，参数应该往哪个方向改</li>
+<li>改完以后，模型对没见过的数据会不会更好</li>
+</ul>
+<p>这就是机器学习乃至深度学习的基本问题。</p>
+<p>可以把它理解成：后面所有高级模块，都是建立在这个最小训练闭环之上的工程放大版。</p>
+<p>例如：</p>
+<ul>
+<li>预训练是在海量文本上重复这个闭环</li>
+<li>SFT 是在更贴近指令场景的数据上重复这个闭环</li>
+<li>LoRA 是用更省参数的方式完成这个闭环</li>
+<li>LLM 评估是在闭环之外验证模型有没有真的变好</li>
+</ul>
+<p>所以这一章的目标不是把你训练成机器学习研究员，而是让你拥有继续往下走所需的“最低但足够”的地基。</p>
+<h2 id="2">2. 监督学习的最小闭环<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<p>先看一个最朴素的监督学习流程。</p>
+<p>假设我们手里有一批样本，每条样本都包含：</p>
+<ul>
+<li>输入 <code>x</code></li>
+<li>正确答案 <code>y</code></li>
+</ul>
+<p>训练时，我们做的事情其实非常固定：</p>
+<ol>
+<li>把输入 <code>x</code> 喂给模型</li>
+<li>模型给出预测 <span class="arithmatex">\( \hat{y} \)</span></li>
+<li>用一个损失函数比较 <span class="arithmatex">\( \hat{y} \)</span> 和 <span class="arithmatex">\( y \)</span></li>
+<li>根据损失对模型参数求梯度</li>
+<li>用优化器更新参数</li>
+<li>重复很多轮，直到模型效果变好</li>
+</ol>
+<p>这就是监督学习最核心的训练闭环。</p>
+<h3 id="_3">一个二分类直觉例子<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>假设我们做一个最简单的文本分类任务：</p>
+<p>输入一句评论，判断它是正面还是负面。</p>
+<p>例如：</p>
+<ul>
+<li>输入：<code>"this movie is great"</code></li>
+<li>标签：<code>positive</code></li>
+</ul>
+<p>模型输出可能是：</p>
+<ul>
+<li><code>positive: 0.8</code></li>
+<li><code>negative: 0.2</code></li>
+</ul>
+<p>如果真实标签是 <code>positive</code>，那这次预测还不错，因为正确类别概率很高。</p>
+<p>但如果模型输出是：</p>
+<ul>
+<li><code>positive: 0.1</code></li>
+<li><code>negative: 0.9</code></li>
+</ul>
+<p>那就说明模型不仅错了，而且错得很自信，这种情况对应的 loss 就应该更大。</p>
+<p>这一点非常重要，因为后面语言模型做的事，本质上也差不多：</p>
+<p>不是判断“正面还是负面”，而是在很多 token 里判断“下一个 token 应该是哪一个”。大模型的本质就是在做这种“接龙游戏”。</p>
+<h2 id="3-token">3. 从分类问题到下一个 token 预测<a class="headerlink" href="#3-token" title="Permanent link">&para;</a></h2>
+<p>很多初学者会觉得语言模型和分类任务差得很远，其实它们非常接近。</p>
+<h3 id="_4">普通分类任务<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p>给定输入 <code>x</code>，从有限个类别里选一个：</p>
+<ul>
+<li>猫 / 狗</li>
+<li>正面 / 负面</li>
+<li>垃圾邮件 / 正常邮件</li>
+</ul>
+<h3 id="_5">语言模型任务<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p>给定前文 <code>x</code>，从词表里的所有 token 中选一个最可能的下一个 token。</p>
+<p>例如句子：</p>
+<p><code>I love deep</code></p>
+<p>模型要预测下一个 token，可能输出：</p>
+<ul>
+<li><code>learning: 0.72</code></li>
+<li><code>blue: 0.08</code></li>
+<li><code>sleeping: 0.03</code></li>
+<li>...</li>
+</ul>
+<p>如果真实下一个 token 是 <code>learning</code>，那训练目标就是让模型给 <code>learning</code> 更高概率。</p>
+<p>所以，语言模型训练可以理解为一种“超大类别数的分类问题”：</p>
+<ul>
+<li>输入：前文 token 序列</li>
+<li>输出：词表上每个 token 的概率分布</li>
+<li>标签：真实下一个 token</li>
+</ul>
+<p>理解了这一点，后面你会更自然地接受：</p>
+<ul>
+<li>为什么要有 logits</li>
+<li>为什么要做 softmax</li>
+<li>为什么 loss 通常是 cross entropy</li>
+</ul>
+<h2 id="4-loss">4. Loss：模型到底哪里做错了<a class="headerlink" href="#4-loss" title="Permanent link">&para;</a></h2>
+<p>训练的关键在于：模型做错时，我们必须把“错得有多严重”量化出来。</p>
+<p>这个量化结果，就是损失函数。</p>
+<h3 id="_6">为什么需要损失函数<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<p>如果只说“这次预测对了”或“这次预测错了”，信息太少。</p>
+<p>比如下面两种情况虽然都错了，但严重程度不同：</p>
+<ul>
+<li>正确答案概率是 <code>0.49</code></li>
+<li>正确答案概率是 <code>0.001</code></li>
+</ul>
+<p>第二种说明模型错得更离谱，训练时应该受到更大惩罚。</p>
+<p>损失函数的作用，就是把这种差异表达出来。</p>
+<h3 id="cross-entropy">语言模型里最常见的损失：Cross Entropy<a class="headerlink" href="#cross-entropy" title="Permanent link">&para;</a></h3>
+<p>对于分类问题，我们最常用的损失函数之一是 Cross Entropy。</p>
+<p>如果真实类别是第 <span class="arithmatex">\( k \)</span> 类，模型给这个类别分配的概率是 <span class="arithmatex">\( p_k \)</span>，那么单个样本的负对数似然可以写成：</p>
+<div class="arithmatex">\[
+\mathcal{L} = -\log p_k
+\]</div>
+<p>这件事的直觉非常简单：</p>
+<ul>
+<li>如果 <span class="arithmatex">\( p_k \)</span> 很大，比如 <code>0.9</code>，那么 loss 很小</li>
+<li>如果 <span class="arithmatex">\( p_k \)</span> 很小，比如 <code>0.01</code>，那么 loss 很大</li>
+</ul>
+<p>也就是说，模型越相信正确答案，损失越小。</p>
+<h3 id="_7">为什么要取负对数<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<p>这里不用一开始把信息论背景讲得太重，先抓住两个性质就够了：</p>
+<ol>
+<li>概率越大，loss 越小</li>
+<li>对“自信但错误”的预测惩罚更重</li>
+</ol>
+<p>举个例子：</p>
+<ul>
+<li>如果正确类别概率是 <code>0.9</code>，那么 <code>-\log 0.9</code> 很小</li>
+<li>如果正确类别概率是 <code>0.1</code>，那么 <code>-\log 0.1</code> 会大很多</li>
+</ul>
+<p>这正好符合训练需求。</p>
+<h3 id="cross-entropy-nll">Cross Entropy 和 NLL 的关系<a class="headerlink" href="#cross-entropy-nll" title="Permanent link">&para;</a></h3>
+<p>在 one-hot 标签场景下，Cross Entropy 可以看成对正确类别概率做 Negative Log Likelihood。</p>
+<p>实际工程里你会经常看到：</p>
+<ul>
+<li><code>softmax</code></li>
+<li><code>log_softmax</code></li>
+<li><code>cross_entropy</code></li>
+<li><code>nll_loss</code></li>
+</ul>
+<p>它们在数学上是紧密相关的。</p>
+<p>对当前阶段来说，你先记住最关键的一点：</p>
+<p>语言模型训练时，我们希望真实 token 的概率越来越高，而 Cross Entropy 正好能把这个目标直接变成可优化的 loss。</p>
+<h2 id="5">5. 梯度下降：知道错了以后怎么改<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>光知道模型错了还不够，我们还得知道参数该怎么更新。</p>
+<p>这就进入了优化问题。</p>
+<h3 id="_8">参数更新的目标<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<p>假设模型有一组参数 <span class="arithmatex">\( \theta \)</span>，损失函数记为：</p>
+<div class="arithmatex">\[
+\mathcal{L}(\theta)
+\]</div>
+<p>训练的目标就是找到一组更好的参数，让 loss 更小。</p>
+<p>最基本的更新方式是梯度下降：</p>
+<div class="arithmatex">\[
+\theta \leftarrow \theta - \eta \nabla_\theta \mathcal{L}
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\( \theta \)</span> 是模型参数</li>
+<li><span class="arithmatex">\( \eta \)</span> 是学习率</li>
+<li><span class="arithmatex">\( \nabla_\theta \mathcal{L} \)</span> 是 loss 对参数的梯度</li>
+</ul>
+<p>这个公式可以先不从数学推导入手，先从直觉理解：</p>
+<p>梯度告诉我们，“如果想让 loss 下降，参数应该往哪个方向调”。</p>
+<h3 id="_9">一个山坡类比<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
+<p>可以把 loss surface 想象成一片起伏地形。</p>
+<ul>
+<li>你当前站在某个位置</li>
+<li>海拔高度就是 loss</li>
+<li>梯度告诉你当前位置最陡的上升方向</li>
+<li>那么负梯度方向，就是最快下降的方向</li>
+</ul>
+<p>训练时，优化器做的事，就是一小步一小步地沿着“下降方向”移动参数。</p>
+<h2 id="6-forwardbackwardgradient">6. Forward、Backward、Gradient 分别在做什么<a class="headerlink" href="#6-forwardbackwardgradient" title="Permanent link">&para;</a></h2>
+<p>这是很多人第一次接触深度学习时最容易卡住的地方。</p>
+<p>你可以把一次训练迭代拆成三个动作。</p>
+<h3 id="1-forward">1. Forward<a class="headerlink" href="#1-forward" title="Permanent link">&para;</a></h3>
+<p>前向传播做的事是：</p>
+<ul>
+<li>输入数据</li>
+<li>经过模型计算</li>
+<li>得到预测结果</li>
+<li>计算 loss</li>
+</ul>
+<p>也就是：</p>
+<p><code>x -&gt; model(x) -&gt; prediction -&gt; loss</code></p>
+<h3 id="2-backward">2. Backward<a class="headerlink" href="#2-backward" title="Permanent link">&para;</a></h3>
+<p>反向传播做的事是：</p>
+<ul>
+<li>从 loss 出发</li>
+<li>根据链式法则</li>
+<li>逐层计算每个参数对 loss 的影响</li>
+</ul>
+<p>最终得到每个参数的梯度。</p>
+<h3 id="3-gradient-step">3. Gradient / Step<a class="headerlink" href="#3-gradient-step" title="Permanent link">&para;</a></h3>
+<p>有了梯度以后，优化器才能更新参数：</p>
+<ul>
+<li>哪些参数该增大</li>
+<li>哪些参数该减小</li>
+<li>每次改多少</li>
+</ul>
+<p>这也是为什么 PyTorch 代码里经常出现下面三步：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</span></code></pre></div>
+<p>它们分别对应：</p>
+<ul>
+<li>计算梯度</li>
+<li>更新参数</li>
+<li>清空上一轮残留梯度</li>
+</ul>
+<h2 id="7-sgdadamadamw">7. 常见优化器：SGD、Adam、AdamW<a class="headerlink" href="#7-sgdadamadamw" title="Permanent link">&para;</a></h2>
+<p>理解优化器时，建议不要死记公式，先抓“它想解决什么问题”。</p>
+<h3 id="sgd">SGD<a class="headerlink" href="#sgd" title="Permanent link">&para;</a></h3>
+<p>随机梯度下降是最基础的优化方法。</p>
+<p>它的思路很直接：</p>
+<ul>
+<li>算出当前 batch 的梯度</li>
+<li>沿负梯度方向更新参数</li>
+</ul>
+<p>优点：</p>
+<ul>
+<li>简单</li>
+<li>直观</li>
+<li>是很多优化方法的基础</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>对学习率比较敏感</li>
+<li>在复杂损失面上可能震荡明显</li>
+<li>不同参数维度使用同一更新尺度，适应性较差</li>
+</ul>
+<h3 id="adam">Adam<a class="headerlink" href="#adam" title="Permanent link">&para;</a></h3>
+<p>Adam 可以理解成一种“带自适应学习率和动量”的优化器。</p>
+<p>直觉上，它会做两件事：</p>
+<ul>
+<li>参考历史梯度方向，减少来回震荡</li>
+<li>针对不同参数使用不同更新尺度</li>
+</ul>
+<p>因此 Adam 通常：</p>
+<ul>
+<li>更容易训起来</li>
+<li>对初学者更友好</li>
+<li>在很多深度学习任务上是默认起点</li>
+</ul>
+<h3 id="adamw">AdamW<a class="headerlink" href="#adamw" title="Permanent link">&para;</a></h3>
+<p>AdamW 可以看成是对 Adam 的一个重要工程改进。</p>
+<p>它把权重衰减（weight decay）和梯度更新更明确地分开处理，因此在训练 Transformer 和大模型时更常见。</p>
+<p>一个实用结论是：</p>
+<ul>
+<li>入门时理解 SGD 和 Adam 的差别</li>
+<li>做现代 LLM 训练时，通常更常见的是 AdamW</li>
+</ul>
+<h2 id="8-loss">8. 过拟合与泛化：训练 loss 降了不代表真的更好了<a class="headerlink" href="#8-loss" title="Permanent link">&para;</a></h2>
+<p>这是第一章必须建立的另一个核心观念。</p>
+<h3 id="_10">什么是泛化<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>
+<p>机器学习不是为了把训练集背下来，而是希望模型在没见过的新样本上也表现不错。</p>
+<p>这种能力叫泛化能力。</p>
+<h3 id="_11">什么是过拟合<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h3>
+<p>过拟合指的是：</p>
+<ul>
+<li>模型在训练集上表现越来越好</li>
+<li>但在验证集或测试集上表现没有同步变好，甚至变差</li>
+</ul>
+<p>这通常意味着模型学到的不只是规律，还有训练数据里的噪声或偶然性。</p>
+<h3 id="_12">一个常见信号<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h3>
+<p>训练过程中，如果你看到：</p>
+<ul>
+<li>train loss 持续下降</li>
+<li>val loss 先下降后上升</li>
+</ul>
+<p>那往往就是过拟合信号。</p>
+<p>所以训练时不能只看训练集指标，还要看验证集指标。</p>
+<h3 id="llm">为什么 LLM 里也一样重要<a class="headerlink" href="#llm" title="Permanent link">&para;</a></h3>
+<p>大模型虽然规模更大，但并没有跳出这个逻辑。</p>
+<p>无论是：</p>
+<ul>
+<li>预训练</li>
+<li>指令微调</li>
+<li>分类微调</li>
+<li>检索增强后的评测</li>
+</ul>
+<p>本质上都在问同一个问题：</p>
+<p>模型是在真正学到可迁移能力，还是只是更贴合当前训练数据？</p>
+<h2 id="9-weight-decayearly-stopping">9. 常见应对手段：正则化、Weight Decay、Early Stopping<a class="headerlink" href="#9-weight-decayearly-stopping" title="Permanent link">&para;</a></h2>
+<p>当模型开始过拟合时，我们通常会使用一些控制手段。</p>
+<h3 id="_13">正则化<a class="headerlink" href="#_13" title="Permanent link">&para;</a></h3>
+<p>正则化的核心思想是：</p>
+<p>不要让模型为了迎合训练集而变得过于复杂或过于极端。</p>
+<p>常见方式包括：</p>
+<ul>
+<li>L2 正则</li>
+<li>Dropout</li>
+<li>数据增强</li>
+<li>权重衰减</li>
+</ul>
+<h3 id="weight-decay">Weight Decay<a class="headerlink" href="#weight-decay" title="Permanent link">&para;</a></h3>
+<p>Weight decay 可以粗略理解成：</p>
+<p>在训练过程中，轻微惩罚过大的参数值，避免参数无限膨胀。</p>
+<p>在现代深度学习训练里，它经常和 AdamW 一起出现。</p>
+<h3 id="early-stopping">Early Stopping<a class="headerlink" href="#early-stopping" title="Permanent link">&para;</a></h3>
+<p>Early stopping 的思路非常朴素：</p>
+<ul>
+<li>训练集上继续训练可能还能降 loss</li>
+<li>但验证集指标已经不再改善</li>
+<li>那就应该提前停止</li>
+</ul>
+<p>它本质上是在防止模型继续记忆训练数据细节。</p>
+<h2 id="10">10. 用一张流程图串起训练闭环<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<p>到这里，我们可以把最小训练流程压缩成一张心智图：</p>
+<ol>
+<li>准备数据：输入 <code>x</code> 和标签 <code>y</code></li>
+<li>前向传播：模型输出预测结果</li>
+<li>计算损失：比较预测和真实标签</li>
+<li>反向传播：计算每个参数的梯度</li>
+<li>参数更新：优化器根据梯度更新参数</li>
+<li>在验证集上评估：判断是否真的变好</li>
+</ol>
+<p>后面你学到的绝大多数训练代码，基本都可以映射到这六步。</p>
+<h2 id="11-pytorch">11. 一个最小 PyTorch 例子<a class="headerlink" href="#11-pytorch" title="Permanent link">&para;</a></h2>
+<p>下面用一个最小的分类例子，把前面的概念连起来。</p>
+<p>这个例子不追求效果多强，只追求让训练闭环清晰可见。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch.optim</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">optim</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># 4 条样本，每条有 2 个特征</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="c1"># 二分类标签</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="p">)</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">AdamW</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">):</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    <span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>                  <span class="c1"># forward</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>        <span class="c1"># compute loss</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>                    <span class="c1"># backward</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>                   <span class="c1"># update</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="mi">20</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;step=</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">, loss=</span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>    <span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;prediction:&quot;</span><span class="p">,</span> <span class="n">pred</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+</span></code></pre></div>
+<h3 id="_14">这段代码里发生了什么<a class="headerlink" href="#_14" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>model(x)</code> 产生每个类别的 logits</li>
+<li><code>CrossEntropyLoss</code> 会把 logits 和标签比较，计算 loss</li>
+<li><code>loss.backward()</code> 自动计算所有参数梯度</li>
+<li><code>optimizer.step()</code> 根据梯度更新参数</li>
+</ul>
+<p>这就是一个完整但极小的训练闭环。</p>
+<p>后面第二章会把这件事扩展到更标准的 PyTorch 训练流程，包括：</p>
+<ul>
+<li><code>Dataset</code></li>
+<li><code>DataLoader</code></li>
+<li><code>train / eval</code></li>
+<li>验证集</li>
+<li>checkpoint</li>
+</ul>
+<h2 id="12">12. 把这个例子映射到语言模型训练<a class="headerlink" href="#12" title="Permanent link">&para;</a></h2>
+<p>现在把刚才的分类例子换成语言模型，会发生什么？</p>
+<h3 id="_15">普通分类<a class="headerlink" href="#_15" title="Permanent link">&para;</a></h3>
+<ul>
+<li>输入：一个样本特征向量</li>
+<li>输出：几个类别的 logits</li>
+<li>标签：类别 id</li>
+</ul>
+<h3 id="_16">语言模型<a class="headerlink" href="#_16" title="Permanent link">&para;</a></h3>
+<ul>
+<li>输入：前文 token 序列</li>
+<li>输出：词表大小的 logits</li>
+<li>标签：下一个 token 的 id</li>
+</ul>
+<p>唯一真正变复杂的地方在于：</p>
+<ul>
+<li>输入从简单向量变成序列</li>
+<li>输出类别数从 2 类变成几万词表</li>
+<li>模型结构从小 MLP 变成 Transformer</li>
+</ul>
+<p>但训练逻辑本身并没有变。</p>
+<p>这也是为什么你后面看到 LLM 训练代码时，不要被体量吓住。</p>
+<p>它们在本质上，仍然是在做：</p>
+<ul>
+<li>forward</li>
+<li>compute loss</li>
+<li>backward</li>
+<li>optimizer step</li>
+</ul>
+<h2 id="13">13. 常见误区<a class="headerlink" href="#13" title="Permanent link">&para;</a></h2>
+<h3 id="1loss">误区 1：loss 降了就说明模型一定更好了<a class="headerlink" href="#1loss" title="Permanent link">&para;</a></h3>
+<p>不一定。</p>
+<p>如果只是训练集 loss 降了，可能只是记住了训练数据；必须结合验证集指标一起看。</p>
+<h3 id="2_1">误区 2：反向传播就是“模型自己知道答案了”<a class="headerlink" href="#2_1" title="Permanent link">&para;</a></h3>
+<p>不是。</p>
+<p>反向传播并不是模型“理解”了，而是在数学上根据损失函数计算参数变化方向。</p>
+<h3 id="3">误区 3：优化器只是调参细节，不重要<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
+<p>不对。</p>
+<p>优化器会直接影响训练稳定性、收敛速度和最终效果，尤其在深度模型里影响很明显。</p>
+<h3 id="4">误区 4：大模型训练和普通分类任务完全不是一回事<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
+<p>不对。</p>
+<p>大模型训练当然更复杂，但底层训练闭环是一致的。理解这一点，能大幅降低你面对 LLM 代码时的陌生感。</p>
+<h2 id="14">14. 面试问题<a class="headerlink" href="#14" title="Permanent link">&para;</a></h2>
+<h3 id="q1">Q1：监督学习的基本训练流程是什么？<a class="headerlink" href="#q1" title="Permanent link">&para;</a></h3>
+<p>输入样本进入模型得到预测，使用损失函数衡量预测和标签的差距，通过反向传播计算梯度，再由优化器更新参数，并在验证集上检查泛化效果。</p>
+<h3 id="q2-cross-entropy">Q2：为什么语言模型训练常用 Cross Entropy？<a class="headerlink" href="#q2-cross-entropy" title="Permanent link">&para;</a></h3>
+<p>因为语言模型本质上是在词表中预测正确的下一个 token，属于分类问题；Cross Entropy 能直接衡量模型给真实 token 分配的概率是否足够高。</p>
+<h3 id="q3lossbackward">Q3：<code>loss.backward()</code> 做了什么？<a class="headerlink" href="#q3lossbackward" title="Permanent link">&para;</a></h3>
+<p>它根据当前计算图，从 loss 出发按链式法则计算每个可训练参数的梯度，并把结果写入参数的 <code>.grad</code> 中，供优化器更新使用。</p>
+<h3 id="q4adam-adamw">Q4：Adam 和 AdamW 的区别可以怎么解释？<a class="headerlink" href="#q4adam-adamw" title="Permanent link">&para;</a></h3>
+<p>AdamW 可以看成对 Adam 的工程改进版本，它把权重衰减和梯度更新解耦，因此在训练 Transformer 和现代大模型时更常见。</p>
+<h3 id="q5">Q5：为什么不能只看训练集指标？<a class="headerlink" href="#q5" title="Permanent link">&para;</a></h3>
+<p>因为机器学习真正关心的是泛化能力。只看训练集可能掩盖过拟合，导致模型对新数据表现很差。</p>
+<h2 id="15">15. 本章小结<a class="headerlink" href="#15" title="Permanent link">&para;</a></h2>
+<p>这一章最重要的不是记住多少公式，而是建立一个稳定认知：</p>
+<p>机器学习训练本质上是在不断重复下面这个闭环：</p>
+<p><code>输入 -&gt; 预测 -&gt; loss -&gt; 梯度 -&gt; 参数更新 -&gt; 验证</code></p>
+<p>而语言模型训练，并没有跳出这个框架。</p>
+<p>它只是把：</p>
+<ul>
+<li>数据变成了文本序列</li>
+<li>输出空间变成了整个词表</li>
+<li>模型结构变成了更强的神经网络</li>
+<li>训练规模放大到了工程级别</li>
+</ul>
+<p>如果你已经能把这条主线讲清楚，后面进入 PyTorch、NLP、Attention、Transformer 时就会顺很多。</p>
+<p>下一章我们会把这些概念正式落到代码层面，进入 PyTorch 与标准训练循环。</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Ferris-Liu" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "navigation.instant", "navigation.instant.progress", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

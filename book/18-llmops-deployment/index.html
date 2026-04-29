@@ -1,0 +1,4498 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="一个AI炼丹师的大模型学习笔记，从 Transformer、预训练、微调到 RAG、Agent 与部署实践。">
+      
+      
+        <meta name="author" content="FerrisLIU">
+      
+      
+        <link rel="canonical" href="https://ferris-liu.github.io/LLM-Start-from-the-scratch/book/18-llmops-deployment/">
+      
+      
+        <link rel="prev" href="../17-agent-tool-calling/">
+      
+      
+        <link rel="next" href="../../frontier/frontier_tech/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第 18 章：LLMOps、部署与生产化 - 机器于此理解语言</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#18-llmops" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="机器于此理解语言" class="md-header__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器于此理解语言
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第 18 章：LLMOps、部署与生产化
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到浅色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换到浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换到深色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="机器于此理解语言" class="md-nav__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器于此理解语言
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about-author/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    作者介绍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前言
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何阅读这本书
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书提纲与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    从这里开始
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    从这里开始
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书导航
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    全书导航
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-role-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 0 章：大模型岗位地图与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 1 · 基础补齐
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 1 · 基础补齐
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pytorch-training-loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 2 章：PyTorch 与训练循环
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-nlp-text-representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 3 章：NLP 基础与文本表示
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-ngram-to-neural-lm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章：从 n-gram 到神经语言模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 3 · Transformer 核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 3 · Transformer 核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-transformer-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章：Transformer 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-tokenizer-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章：Tokenizer 与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-pretraining/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 9 章：预训练 Pretraining
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-scaling-law/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 10 章：Scaling Law 与大模型为什么变大
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 11 章：LLM 评估
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 5 · 后训练与微调
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 5 · 后训练与微调
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-sft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 12 章：Supervised Fine-Tuning，SFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-lora-qlora-peft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 13 章：参数高效微调：LoRA / QLoRA / PEFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 14 章：偏好对齐：RLHF / DPO / RLAIF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 6 · LLM 应用工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 6 · LLM 应用工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-embedding-retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 15 章：Embedding、向量数据库与语义检索
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 18 章：LLMOps、部署与生产化
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 18 章：LLMOps、部署与生产化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-demo-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 为什么 demo 和 production 差这么远
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 为什么 demo 和 production 差这么远">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-demo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 demo 通常只看“能不能做”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 production 还要看“能不能稳定地做”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 大模型系统比普通服务多了哪些不稳定性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-llmops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 什么是 LLMOps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 什么是 LLMOps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-mlops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 它和 MLOps 的相同点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-mlops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 它和传统 MLOps 的不同点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-llmops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 更准确地说，LLMOps 管的是“系统行为”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 一个最小生产化 LLM 系统长什么样
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 部署并不只是“把模型 API 调起来”
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 部署并不只是“把模型 API 调起来”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 生产部署至少要回答四个问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 托管 API 和自部署推理，各自适合什么场景
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6.2 托管 API 和自部署推理，各自适合什么场景">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        托管 API 的优点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        托管 API 的代价
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自部署模型的优点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自部署模型的代价
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 推理性能：线上最先把你打醒的问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. 推理性能：线上最先把你打醒的问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 你至少要关心两个指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 延迟为什么经常比你想象中高
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 streaming：先把第一段内容尽快吐出来
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-batching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 batching：提高吞吐，但不一定降低单用户等待
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#75-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.5 cache：很多钱不是靠更强模型省的，而是靠别重复算
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#76-kv-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.6 KV cache 和长上下文成本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#77-quantization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.7 quantization：用更便宜的资源跑起来
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 质量、延迟、成本为什么总在互相拉扯
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 质量、延迟、成本为什么总在互相拉扯">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 想提升质量，常见做法往往会变贵变慢
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 想压成本，常见做法往往会伤效果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 所以生产系统真正需要的是“分层策略”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 成本控制：别等账单来了才开始学
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 成本控制：别等账单来了才开始学">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 至少要按请求记录这些信息
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 成本异常通常来自几类问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 最实用的几条控费手段
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 评估：线上系统不能只靠“看起来还行”
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 评估：线上系统不能只靠“看起来还行”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-offline-eval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 offline eval 解决什么问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-online-eval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 online eval 解决什么问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 LLM 系统的评估常常要分层
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 评估不是一次性工作，而是发布门槛
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 监控与可观测性：你得知道系统到底在干什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. 监控与可观测性：你得知道系统到底在干什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 你至少要监控三类东西
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11.1 你至少要监控三类东西">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一类：系统指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第二类：模型与链路指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第三类：质量代理指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-trace-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 trace 很重要，因为 LLM 请求不是单跳调用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 日志要能复盘，不只是能打印
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Prompt、模型、配置都必须版本化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. Prompt、模型、配置都必须版本化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1 为什么 prompt 必须像代码一样管理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.2 真正应该一起版本化的对象
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#123" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.3 线上问题排查时，最怕“无法复现”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 发布、灰度与回滚：别一次把全量用户变成测试集
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 发布、灰度与回滚：别一次把全量用户变成测试集">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 哪些改动都应该视为“高风险改动”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 灰度发布的基本思路
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 回滚能力比“自信上线”更重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-rag-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. RAG 和 Agent 上线后，风险会进一步放大
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. RAG 和 Agent 上线后，风险会进一步放大">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 RAG 的线上典型风险
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 Agent 的线上典型风险
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143-guardrails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.3 所以 guardrails 必须成为系统的一部分
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 一个最小可用的生产化方案
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. 一个最小可用的生产化方案">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#151" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.1 场景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#152" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.2 技术结构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#153" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.3 最低限度要补齐的工程能力
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-llmops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. 面试里怎么讲 LLMOps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. 面试里怎么讲 LLMOps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.1 先讲它解决什么问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.2 再讲为什么它比传统服务更难
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#163" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.3 再讲你会关注哪些核心模块
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#164" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.4 最后给一个实际判断
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. 练习题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. 面试题
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前沿技术观察
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    前沿技术观察
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_tech/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术条目池
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    分析报告索引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/reports/deepseek-v4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek-V4 技术分析报告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/_report_template/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通用报告模板
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-demo-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 为什么 demo 和 production 差这么远
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 为什么 demo 和 production 差这么远">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-demo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 demo 通常只看“能不能做”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 production 还要看“能不能稳定地做”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 大模型系统比普通服务多了哪些不稳定性
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-llmops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 什么是 LLMOps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 什么是 LLMOps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-mlops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 它和 MLOps 的相同点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-mlops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 它和传统 MLOps 的不同点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-llmops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 更准确地说，LLMOps 管的是“系统行为”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 一个最小生产化 LLM 系统长什么样
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 部署并不只是“把模型 API 调起来”
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 部署并不只是“把模型 API 调起来”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 生产部署至少要回答四个问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 托管 API 和自部署推理，各自适合什么场景
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6.2 托管 API 和自部署推理，各自适合什么场景">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        托管 API 的优点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        托管 API 的代价
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自部署模型的优点
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自部署模型的代价
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 推理性能：线上最先把你打醒的问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. 推理性能：线上最先把你打醒的问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 你至少要关心两个指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 延迟为什么经常比你想象中高
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 streaming：先把第一段内容尽快吐出来
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-batching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 batching：提高吞吐，但不一定降低单用户等待
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#75-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.5 cache：很多钱不是靠更强模型省的，而是靠别重复算
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#76-kv-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.6 KV cache 和长上下文成本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#77-quantization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.7 quantization：用更便宜的资源跑起来
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 质量、延迟、成本为什么总在互相拉扯
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 质量、延迟、成本为什么总在互相拉扯">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 想提升质量，常见做法往往会变贵变慢
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 想压成本，常见做法往往会伤效果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 所以生产系统真正需要的是“分层策略”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 成本控制：别等账单来了才开始学
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 成本控制：别等账单来了才开始学">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 至少要按请求记录这些信息
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 成本异常通常来自几类问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 最实用的几条控费手段
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 评估：线上系统不能只靠“看起来还行”
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 评估：线上系统不能只靠“看起来还行”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-offline-eval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 offline eval 解决什么问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-online-eval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 online eval 解决什么问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 LLM 系统的评估常常要分层
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 评估不是一次性工作，而是发布门槛
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 监控与可观测性：你得知道系统到底在干什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. 监控与可观测性：你得知道系统到底在干什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 你至少要监控三类东西
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11.1 你至少要监控三类东西">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一类：系统指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第二类：模型与链路指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第三类：质量代理指标
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-trace-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 trace 很重要，因为 LLM 请求不是单跳调用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 日志要能复盘，不只是能打印
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Prompt、模型、配置都必须版本化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. Prompt、模型、配置都必须版本化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1 为什么 prompt 必须像代码一样管理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.2 真正应该一起版本化的对象
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#123" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.3 线上问题排查时，最怕“无法复现”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 发布、灰度与回滚：别一次把全量用户变成测试集
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 发布、灰度与回滚：别一次把全量用户变成测试集">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 哪些改动都应该视为“高风险改动”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 灰度发布的基本思路
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 回滚能力比“自信上线”更重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-rag-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. RAG 和 Agent 上线后，风险会进一步放大
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. RAG 和 Agent 上线后，风险会进一步放大">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 RAG 的线上典型风险
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 Agent 的线上典型风险
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143-guardrails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.3 所以 guardrails 必须成为系统的一部分
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 一个最小可用的生产化方案
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. 一个最小可用的生产化方案">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#151" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.1 场景
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#152" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.2 技术结构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#153" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.3 最低限度要补齐的工程能力
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-llmops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. 面试里怎么讲 LLMOps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. 面试里怎么讲 LLMOps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.1 先讲它解决什么问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.2 再讲为什么它比传统服务更难
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#163" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.3 再讲你会关注哪些核心模块
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#164" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.4 最后给一个实际判断
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. 练习题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. 面试题
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/edit/main/docs/book/18-llmops-deployment.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="18-llmops">第 18 章：LLMOps、部署与生产化<a class="headerlink" href="#18-llmops" title="Permanent link">&para;</a></h1>
+<h2 id="1">1. 本章要解决的问题<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>到第 17 章为止，我们已经把一个大模型应用最吸引人的部分讲出来了：</p>
+<ul>
+<li>能检索知识</li>
+<li>能调用工具</li>
+<li>能围绕目标多步完成任务</li>
+</ul>
+<p>如果只是在 notebook、本地脚本或者课程 demo 里跑通，这已经很不错了。</p>
+<p>但只要你真的把系统交给别人用，问题立刻会变一类。</p>
+<p>不再只是：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>这个回答看起来对不对？
+</span></code></pre></div>
+<p>而会变成：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>为什么今天延迟突然翻倍了？
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>为什么这周 token 成本超预算？
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>为什么同一个问题线上和本地答案不一样？
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>为什么新版本上线后 citation 变少了？
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>为什么 Agent 开始频繁调用无关工具？
+</span></code></pre></div>
+<p>这时你会发现：</p>
+<p><strong>从“把功能做出来”到“把系统稳定跑起来”，中间隔着一整套工程问题。</strong></p>
+<p>这就是 LLMOps 要处理的内容。</p>
+<p>如果说前几章主要解决的是：</p>
+<ul>
+<li>模型怎样训练</li>
+<li>模型怎样对齐</li>
+<li>模型怎样接知识和工具</li>
+</ul>
+<p>那么本章要解决的就是：</p>
+<p><strong>当这些能力进入真实环境后，怎样部署、监控、评估、回滚，并把质量、延迟和成本一起管起来。</strong></p>
+<p>从全书结构上看，这一章也是前面所有内容的落地收束：</p>
+<ul>
+<li>第 15 章讲知识如何变成可检索对象</li>
+<li>第 16 章讲 RAG 如何把检索接进回答</li>
+<li>第 17 章讲 Agent 如何调用外部能力完成任务</li>
+<li>本章讲这些系统上线后如何真正“像产品一样活着”</li>
+</ul>
+<h2 id="2">2. 你学完后应该会什么<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>能解释什么是 LLMOps，以及它和传统 MLOps、后端运维的联系与差别</li>
+<li>能说明为什么大模型 demo 往往很惊艳，但 production 往往很脆弱</li>
+<li>能画出一个最小可用的 LLM 服务架构：网关、应用层、模型层、检索层、日志监控层</li>
+<li>能理解吞吐、延迟、成本、质量之间为什么总在互相拉扯</li>
+<li>能描述常见推理优化方法：streaming、batching、cache、量化、路由</li>
+<li>能区分 offline eval、online eval、人工抽检各自解决什么问题</li>
+<li>能理解生产系统里为什么必须做 prompt/version/model/config 的可追踪管理</li>
+<li>能从工程视角识别发布、灰度、回滚、告警、安全和预算控制的关键点</li>
+</ul>
+<h2 id="3-demo-production">3. 为什么 demo 和 production 差这么远<a class="headerlink" href="#3-demo-production" title="Permanent link">&para;</a></h2>
+<p>很多人第一次做大模型应用时，都会经历一个很典型的错觉：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>本地已经能答对了，为什么上线后还是一堆问题？
+</span></code></pre></div>
+<p>因为 demo 证明的通常只是：</p>
+<p><strong>在若干理想样例上，这个思路可能有效。</strong></p>
+<p>而 production 要证明的是：</p>
+<p><strong>在真实用户、真实流量、真实脏数据、真实预算约束下，系统还能持续有效。</strong></p>
+<p>这两件事不是一个难度级别。</p>
+<h3 id="31-demo">3.1 demo 通常只看“能不能做”<a class="headerlink" href="#31-demo" title="Permanent link">&para;</a></h3>
+<p>例如你本地做一个课程问答助手，可能只验证了：</p>
+<ul>
+<li>问几条示例问题能不能答出来</li>
+<li>检索结果看起来相关不相关</li>
+<li>模型输出是不是通顺</li>
+</ul>
+<p>这些当然重要，但还不够。</p>
+<h3 id="32-production">3.2 production 还要看“能不能稳定地做”<a class="headerlink" href="#32-production" title="Permanent link">&para;</a></h3>
+<p>上线后你还要面对：</p>
+<ul>
+<li>高峰流量时是否超时</li>
+<li>某个上游模型 API 波动时如何降级</li>
+<li>文档更新后索引是否同步</li>
+<li>prompt 改动后效果是否回退</li>
+<li>错误回答是否能被发现和定位</li>
+<li>每天预算是否会被异常请求打爆</li>
+</ul>
+<p>所以一个很重要的认知是：</p>
+<p><strong>LLM 产品的问题，只有一部分是“模型问题”，另一大部分其实是“系统问题”。</strong></p>
+<h3 id="33">3.3 大模型系统比普通服务多了哪些不稳定性<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<p>和传统后端服务相比，LLM 系统往往额外引入了几类不确定性：</p>
+<ul>
+<li>输出不是严格确定的</li>
+<li>质量很难用单一指标衡量</li>
+<li>prompt 微调可能导致行为明显变化</li>
+<li>上下文长度、tool use、检索结果都会影响输出</li>
+<li>成本和延迟会随输入长度、模型选择、调用链深度一起变化</li>
+</ul>
+<p>这意味着你不能只盯着 <code>HTTP 200</code>。</p>
+<p>对 LLM 系统来说，很多时候：</p>
+<p><strong>接口成功返回，不等于用户真的成功。</strong></p>
+<h2 id="4-llmops">4. 什么是 LLMOps<a class="headerlink" href="#4-llmops" title="Permanent link">&para;</a></h2>
+<p>可以先给一个偏工程而不是偏概念的定义。</p>
+<p><strong>LLMOps 就是围绕大模型应用的开发、部署、评估、监控、迭代与治理的一整套工程实践。</strong></p>
+<p>它和传统 MLOps 有重叠，但又不完全一样。</p>
+<h3 id="41-mlops">4.1 它和 MLOps 的相同点<a class="headerlink" href="#41-mlops" title="Permanent link">&para;</a></h3>
+<p>相同点包括：</p>
+<ul>
+<li>都关心版本管理</li>
+<li>都关心部署与发布</li>
+<li>都关心监控和告警</li>
+<li>都关心评估与回归测试</li>
+</ul>
+<h3 id="42-mlops">4.2 它和传统 MLOps 的不同点<a class="headerlink" href="#42-mlops" title="Permanent link">&para;</a></h3>
+<p>不同点主要在于，大模型应用往往多了这些对象：</p>
+<ul>
+<li>prompt</li>
+<li>system instruction</li>
+<li>retrieval pipeline</li>
+<li>tool schema</li>
+<li>context construction</li>
+<li>model routing</li>
+<li>conversation state</li>
+</ul>
+<p>也就是说，被管理的不再只是“模型文件”。</p>
+<p>你真正要管理的是一整条推理链路。</p>
+<h3 id="43-llmops">4.3 更准确地说，LLMOps 管的是“系统行为”<a class="headerlink" href="#43-llmops" title="Permanent link">&para;</a></h3>
+<p>一个线上回答变差，问题可能来自：</p>
+<ul>
+<li>模型换了</li>
+<li>prompt 改了</li>
+<li>检索 top-k 变了</li>
+<li>rerank 关了</li>
+<li>chunk 逻辑更新了</li>
+<li>工具超时了</li>
+<li>上下文截断了</li>
+</ul>
+<p>因此 LLMOps 的核心不是只看某个单点组件，而是：</p>
+<p><strong>把最终用户体验往回拆，映射到整条链路的可观测、可评估、可回滚。</strong></p>
+<h2 id="5-llm">5. 一个最小生产化 LLM 系统长什么样<a class="headerlink" href="#5-llm" title="Permanent link">&para;</a></h2>
+<p>不妨先建立一个整体图景。</p>
+<p>一个最小可用的生产系统，通常至少包含下面几层：</p>
+<ol>
+<li>接入层：Web、App、API 网关</li>
+<li>应用编排层：prompt 构造、会话管理、工具路由、权限控制</li>
+<li>模型推理层：本地推理服务或外部模型 API</li>
+<li>知识与工具层：向量库、数据库、搜索、内部接口、执行器</li>
+<li>观测治理层：日志、指标、评估、告警、灰度、回滚</li>
+</ol>
+<p>可以把它粗略画成：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>User
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  ↓
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>API / Gateway
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  ↓
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>LLM App Server
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  ├─ Prompt Builder
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  ├─ Session Memory
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  ├─ RAG Pipeline
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>  ├─ Tool Router
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>  └─ Guardrails
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>  ↓
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>Model Serving
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>  ├─ Hosted API
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>  └─ Self-hosted Inference
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>  ↓
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>Data / Tools
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>  ├─ Vector DB
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>  ├─ SQL / KV
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>  ├─ Search
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>  └─ Internal APIs
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>  ↓
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>Observability
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>  ├─ Logs
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>  ├─ Metrics
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>  ├─ Traces
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>  └─ Eval Dashboard
+</span></code></pre></div>
+<p>注意这里最容易被忽略的一点：</p>
+<p><strong>模型只是其中一层，不是整个系统。</strong></p>
+<h2 id="6-api">6. 部署并不只是“把模型 API 调起来”<a class="headerlink" href="#6-api" title="Permanent link">&para;</a></h2>
+<p>很多初学者会把“部署”理解成：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>写个 FastAPI，然后转发到模型接口。
+</span></code></pre></div>
+<p>这当然是第一步，但离真正可用还差很多。</p>
+<h3 id="61">6.1 生产部署至少要回答四个问题<a class="headerlink" href="#61" title="Permanent link">&para;</a></h3>
+<ol>
+<li>请求怎么进来，如何鉴权、限流、记录？</li>
+<li>应用怎么组织上下文、检索、工具和模型调用？</li>
+<li>模型如何服务，容量如何规划，失败如何降级？</li>
+<li>出问题后，怎样发现、定位和回滚？</li>
+</ol>
+<h3 id="62-api">6.2 托管 API 和自部署推理，各自适合什么场景<a class="headerlink" href="#62-api" title="Permanent link">&para;</a></h3>
+<p>先建立一个很实用的判断。</p>
+<h4 id="api">托管 API 的优点<a class="headerlink" href="#api" title="Permanent link">&para;</a></h4>
+<ul>
+<li>接入快</li>
+<li>省去推理基础设施维护</li>
+<li>模型升级方便</li>
+<li>适合快速验证产品方向</li>
+</ul>
+<h4 id="api_1">托管 API 的代价<a class="headerlink" href="#api_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>成本更难压到极致</li>
+<li>延迟和配额受上游影响</li>
+<li>可控性有限</li>
+<li>某些数据合规要求下不方便</li>
+</ul>
+<h4 id="_1">自部署模型的优点<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>可控性更强</li>
+<li>可以做更细的推理优化</li>
+<li>私有化和数据隔离更容易</li>
+<li>对稳定高流量业务可能更经济</li>
+</ul>
+<h4 id="_2">自部署模型的代价<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li>需要显存、机器、调度和运维能力</li>
+<li>模型升级、量化、并发调优都要自己做</li>
+<li>容量估算失误会直接影响 SLA</li>
+</ul>
+<p>现实里常见的做法往往不是二选一，而是分层：</p>
+<ul>
+<li>核心链路用稳定模型</li>
+<li>长尾复杂任务走更强模型</li>
+<li>非关键任务走便宜模型</li>
+</ul>
+<p>这就是后面会讲到的模型路由。</p>
+<h2 id="7">7. 推理性能：线上最先把你打醒的问题<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<p>在 production 里，用户最直观的体验通常不是“loss 多少”，而是：</p>
+<ul>
+<li>快不快</li>
+<li>稳不稳</li>
+<li>贵不贵</li>
+</ul>
+<p>这三个问题里，性能几乎总是最早暴露出来的。</p>
+<h3 id="71">7.1 你至少要关心两个指标<a class="headerlink" href="#71" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>latency</code>：单次请求多久返回</li>
+<li><code>throughput</code>：单位时间能处理多少请求</li>
+</ul>
+<p>很多优化都是在这两者之间做权衡。</p>
+<h3 id="72">7.2 延迟为什么经常比你想象中高<a class="headerlink" href="#72" title="Permanent link">&para;</a></h3>
+<p>一次看似简单的问答，实际可能包含：</p>
+<ol>
+<li>网关接入</li>
+<li>用户鉴权</li>
+<li>查询改写</li>
+<li>embedding</li>
+<li>检索</li>
+<li>rerank</li>
+<li>prompt 拼接</li>
+<li>模型生成</li>
+<li>工具调用</li>
+<li>后处理</li>
+</ol>
+<p>如果是 Agent，这里面还可能循环多轮。</p>
+<p>所以延迟不是只看“模型生成多久”，而是整条链路的累计结果。</p>
+<h3 id="73-streaming">7.3 streaming：先把第一段内容尽快吐出来<a class="headerlink" href="#73-streaming" title="Permanent link">&para;</a></h3>
+<p>对聊天产品来说，用户往往并不要求“整体完成时间绝对最短”，而更在意：</p>
+<p><strong>有没有马上开始响应。</strong></p>
+<p>这就是 streaming 的价值。</p>
+<p>即使总耗时没变太多，只要首 token 时间明显缩短，主观体验就会好很多。</p>
+<h3 id="74-batching">7.4 batching：提高吞吐，但不一定降低单用户等待<a class="headerlink" href="#74-batching" title="Permanent link">&para;</a></h3>
+<p>batching 的核心思想是：</p>
+<p><strong>把多个请求攒在一起算，提高硬件利用率。</strong></p>
+<p>它通常有利于：</p>
+<ul>
+<li>GPU 吃满</li>
+<li>单位 token 成本下降</li>
+<li>高并发场景吞吐提升</li>
+</ul>
+<p>但 batching 也可能带来：</p>
+<ul>
+<li>队列等待时间变长</li>
+<li>低并发时收益不明显</li>
+<li>实时交互体验下降</li>
+</ul>
+<p>所以你要分场景看：</p>
+<ul>
+<li>离线任务适合 aggressive batching</li>
+<li>在线对话更需要平衡首响应时间</li>
+</ul>
+<h3 id="75-cache">7.5 cache：很多钱不是靠更强模型省的，而是靠别重复算<a class="headerlink" href="#75-cache" title="Permanent link">&para;</a></h3>
+<p>LLM 系统里最容易立刻见效的优化之一就是 cache。</p>
+<p>常见缓存包括：</p>
+<ul>
+<li>prompt cache</li>
+<li>retrieval cache</li>
+<li>embedding cache</li>
+<li>response cache</li>
+<li>tool result cache</li>
+</ul>
+<p>例如一个课程问答系统里，很多热门问题其实会被重复问。</p>
+<p>如果答案生成逻辑、知识版本和权限范围都一致，那么缓存命中后就可以显著降低：</p>
+<ul>
+<li>延迟</li>
+<li>token 成本</li>
+<li>上游 API 压力</li>
+</ul>
+<p>但缓存一定要小心两个问题：</p>
+<ul>
+<li>过期策略</li>
+<li>权限隔离</li>
+</ul>
+<p>共享缓存如果不考虑租户或用户权限，可能直接造成数据泄漏。</p>
+<h3 id="76-kv-cache">7.6 KV cache 和长上下文成本<a class="headerlink" href="#76-kv-cache" title="Permanent link">&para;</a></h3>
+<p>当上下文越来越长时，推理成本会迅速上升。</p>
+<p>这也是为什么很多系统即使模型支持超长上下文，也不应该无脑全塞。</p>
+<p>你要意识到：</p>
+<ul>
+<li>上下文越长，延迟通常越高</li>
+<li>token 越多，成本通常越高</li>
+<li>无关上下文过多，还可能让答案变差</li>
+</ul>
+<p>所以生产优化的一个基本原则是：</p>
+<p><strong>给模型足够的信息，而不是给模型所有信息。</strong></p>
+<h3 id="77-quantization">7.7 quantization：用更便宜的资源跑起来<a class="headerlink" href="#77-quantization" title="Permanent link">&para;</a></h3>
+<p>如果是自部署模型，量化通常是绕不过去的主题。</p>
+<p>它的核心目标是：</p>
+<p><strong>在尽量少损失效果的前提下，降低显存占用和推理成本。</strong></p>
+<p>但量化不是银弹。</p>
+<p>你不能只问：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>能不能从 FP16 变成 8-bit 或 4-bit？
+</span></code></pre></div>
+<p>还要问：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>变完后准确率掉多少？
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>复杂推理是否更差？
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>工具调用稳定性会不会下降？
+</span></code></pre></div>
+<h2 id="8">8. 质量、延迟、成本为什么总在互相拉扯<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<p>做 LLM 产品时，一个非常现实的感受是：</p>
+<p><strong>你几乎不可能同时把质量、延迟、成本都优化到极致。</strong></p>
+<h3 id="81">8.1 想提升质量，常见做法往往会变贵变慢<a class="headerlink" href="#81" title="Permanent link">&para;</a></h3>
+<p>例如：</p>
+<ul>
+<li>换更强模型</li>
+<li>给更长上下文</li>
+<li>加 rerank</li>
+<li>做多路采样</li>
+<li>让 Agent 多走几步</li>
+</ul>
+<p>这些通常都可能提升效果，但也常常意味着更多 token、更多链路步骤和更高延迟。</p>
+<h3 id="82">8.2 想压成本，常见做法往往会伤效果<a class="headerlink" href="#82" title="Permanent link">&para;</a></h3>
+<p>例如：</p>
+<ul>
+<li>换更小模型</li>
+<li>降低 max tokens</li>
+<li>少检索一些文档</li>
+<li>减少工具调用次数</li>
+<li>减少多轮规划</li>
+</ul>
+<p>这样能省钱，但很可能把边缘问题、复杂问题、长上下文问题一起伤掉。</p>
+<h3 id="83">8.3 所以生产系统真正需要的是“分层策略”<a class="headerlink" href="#83" title="Permanent link">&para;</a></h3>
+<p>比较常见的做法包括：</p>
+<ul>
+<li>简单问题走小模型</li>
+<li>高风险问题走强模型</li>
+<li>首轮用便宜模型分类，再决定是否升级</li>
+<li>热门问题优先走缓存</li>
+<li>低价值请求做更严格限流</li>
+</ul>
+<p>这类策略的本质不是追求单点最优，而是：</p>
+<p><strong>让整体系统在预算内达到足够好的体验。</strong></p>
+<h2 id="9">9. 成本控制：别等账单来了才开始学<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<p>大模型应用最容易在早期被忽略的，就是成本治理。</p>
+<p>因为本地开发时你看到的只是：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>这次请求成功了。
+</span></code></pre></div>
+<p>但线上你要看到的是：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>这次请求花了多少钱，为什么花这么多，以后能不能少花一点。
+</span></code></pre></div>
+<h3 id="91">9.1 至少要按请求记录这些信息<a class="headerlink" href="#91" title="Permanent link">&para;</a></h3>
+<ul>
+<li>使用了哪个模型</li>
+<li>输入 token 数</li>
+<li>输出 token 数</li>
+<li>检索了多少文档</li>
+<li>是否发生了工具调用</li>
+<li>工具调用次数</li>
+<li>总耗时</li>
+<li>估算成本</li>
+</ul>
+<p>没有这类明细，你后面几乎没法做优化归因。</p>
+<h3 id="92">9.2 成本异常通常来自几类问题<a class="headerlink" href="#92" title="Permanent link">&para;</a></h3>
+<ul>
+<li>prompt 过长</li>
+<li>历史会话无上限累积</li>
+<li>Agent 步数失控</li>
+<li>重复检索和重复调用</li>
+<li>输出长度约束太松</li>
+<li>路由策略把太多请求送进大模型</li>
+</ul>
+<h3 id="93">9.3 最实用的几条控费手段<a class="headerlink" href="#93" title="Permanent link">&para;</a></h3>
+<ol>
+<li>给会话历史做压缩或摘要</li>
+<li>限制最大步数、最大工具次数、最大输出长度</li>
+<li>做缓存和去重</li>
+<li>给请求做模型分级路由</li>
+<li>把离线批处理和在线交互分开设计</li>
+<li>对低价值或滥用请求限流</li>
+</ol>
+<p>你会发现，这些方法很多都不是“模型算法创新”，而是很朴素的系统工程。</p>
+<h2 id="10">10. 评估：线上系统不能只靠“看起来还行”<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<p>到了 production，评估必须从“印象派”变成“机制化”。</p>
+<h3 id="101-offline-eval">10.1 offline eval 解决什么问题<a class="headerlink" href="#101-offline-eval" title="Permanent link">&para;</a></h3>
+<p>offline eval 主要用于：</p>
+<ul>
+<li>新 prompt 是否比旧 prompt 更好</li>
+<li>新模型是否值得替换旧模型</li>
+<li>检索链路调整后召回是否退化</li>
+<li>工具路由修改后成功率是否变化</li>
+</ul>
+<p>它的优势是：</p>
+<ul>
+<li>成本可控</li>
+<li>可重复</li>
+<li>方便做 A/B 对比</li>
+</ul>
+<p>它的局限是：</p>
+<ul>
+<li>覆盖不到真实线上分布</li>
+<li>很难完全还原用户行为</li>
+<li>标注标准可能和真实业务目标有偏差</li>
+</ul>
+<h3 id="102-online-eval">10.2 online eval 解决什么问题<a class="headerlink" href="#102-online-eval" title="Permanent link">&para;</a></h3>
+<p>online eval 更关注真实使用表现，例如：</p>
+<ul>
+<li>用户是否继续追问</li>
+<li>用户是否复制结果</li>
+<li>是否点击引用来源</li>
+<li>是否中途退出</li>
+<li>人工反馈是赞还是踩</li>
+</ul>
+<p>在线指标离业务更近，但噪声也更大。</p>
+<p>所以实践里通常不是 offline 和 online 二选一，而是配合使用：</p>
+<ul>
+<li>offline 用来做发布前回归</li>
+<li>online 用来做真实效果观测</li>
+</ul>
+<h3 id="103-llm">10.3 LLM 系统的评估常常要分层<a class="headerlink" href="#103-llm" title="Permanent link">&para;</a></h3>
+<p>不要只盯一个“最终满意度”。</p>
+<p>更实用的做法是把链路拆开看。</p>
+<p>例如对一个 RAG + Agent 系统，可以分别评估：</p>
+<ul>
+<li>query rewrite 是否合理</li>
+<li>retrieval recall 是否足够</li>
+<li>rerank 是否把关键文档提上来</li>
+<li>final answer 是否回答了问题</li>
+<li>citation 是否准确</li>
+<li>tool selection 是否正确</li>
+<li>tool arguments 是否合法</li>
+<li>task completion 是否成功</li>
+</ul>
+<p>这会让你更容易定位问题到底出在哪一段。</p>
+<h3 id="104">10.4 评估不是一次性工作，而是发布门槛<a class="headerlink" href="#104" title="Permanent link">&para;</a></h3>
+<p>真正成熟一点的团队，通常会把评估接进发布流程：</p>
+<ul>
+<li>新版本先跑离线评估</li>
+<li>指标不过线不发布</li>
+<li>小流量灰度观察线上指标</li>
+<li>异常时自动回滚或人工回滚</li>
+</ul>
+<p>这才是“评估工程化”的开始。</p>
+<h2 id="11">11. 监控与可观测性：你得知道系统到底在干什么<a class="headerlink" href="#11" title="Permanent link">&para;</a></h2>
+<p>如果说评估是判断“做得好不好”，那么监控更像是判断：</p>
+<p><strong>它现在是不是在健康地运行。</strong></p>
+<h3 id="111">11.1 你至少要监控三类东西<a class="headerlink" href="#111" title="Permanent link">&para;</a></h3>
+<h4 id="_3">第一类：系统指标<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li>QPS</li>
+<li>错误率</li>
+<li>P95 / P99 延迟</li>
+<li>超时率</li>
+<li>重试率</li>
+</ul>
+<h4 id="_4">第二类：模型与链路指标<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li>平均输入输出 token</li>
+<li>每请求平均成本</li>
+<li>检索耗时</li>
+<li>工具调用次数</li>
+<li>Agent 平均步数</li>
+<li>模型路由分布</li>
+</ul>
+<h4 id="_5">第三类：质量代理指标<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
+<ul>
+<li>用户追问率</li>
+<li>人工差评率</li>
+<li>citation 缺失率</li>
+<li>空回答率</li>
+<li>拒答率</li>
+</ul>
+<p>很多线上事故，恰恰不是接口彻底挂了，而是质量 quietly 变差了。</p>
+<h3 id="112-trace-llm">11.2 trace 很重要，因为 LLM 请求不是单跳调用<a class="headerlink" href="#112-trace-llm" title="Permanent link">&para;</a></h3>
+<p>传统接口可能只是一进一出。</p>
+<p>但 LLM 应用常常是一串调用：</p>
+<ul>
+<li>改写 query</li>
+<li>检索</li>
+<li>rerank</li>
+<li>生成</li>
+<li>调工具</li>
+<li>再生成</li>
+</ul>
+<p>如果没有 trace，你很难知道时间到底花在哪一步、错误到底出在哪一层。</p>
+<p>所以对这类系统来说，链路追踪几乎是刚需。</p>
+<h3 id="113">11.3 日志要能复盘，不只是能打印<a class="headerlink" href="#113" title="Permanent link">&para;</a></h3>
+<p>有价值的日志，至少应该能回答：</p>
+<ul>
+<li>当时用户问了什么</li>
+<li>走了哪个 prompt 版本</li>
+<li>用了哪个模型版本</li>
+<li>检索到了哪些文档</li>
+<li>调了哪些工具</li>
+<li>每一步耗时多少</li>
+<li>最终输出是什么</li>
+</ul>
+<p>当然，这里还必须同时考虑脱敏与合规。</p>
+<p>不是所有原始输入、原始上下文都应该无条件长期保存。</p>
+<h2 id="12-prompt">12. Prompt、模型、配置都必须版本化<a class="headerlink" href="#12-prompt" title="Permanent link">&para;</a></h2>
+<p>很多团队到了线上还在用一种很危险的方式迭代：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>把 prompt 改一下试试。
+</span></code></pre></div>
+<p>这在 demo 阶段可能问题不大，但 production 不行。</p>
+<h3 id="121-prompt">12.1 为什么 prompt 必须像代码一样管理<a class="headerlink" href="#121-prompt" title="Permanent link">&para;</a></h3>
+<p>因为 prompt 改动会直接影响：</p>
+<ul>
+<li>回答风格</li>
+<li>工具调用倾向</li>
+<li>拒答边界</li>
+<li>输出格式</li>
+<li>安全行为</li>
+</ul>
+<p>如果不做版本化，你后面连“效果为什么变了”都说不清。</p>
+<h3 id="122">12.2 真正应该一起版本化的对象<a class="headerlink" href="#122" title="Permanent link">&para;</a></h3>
+<ul>
+<li>prompt 模板</li>
+<li>model name / model version</li>
+<li>system instruction</li>
+<li>retrieval 参数</li>
+<li>rerank 参数</li>
+<li>tool schema</li>
+<li>路由策略</li>
+<li>安全规则</li>
+</ul>
+<p>一个常见错误是只记录“当前线上模型是什么”，却不记录“当前线上系统其实是怎样拼出来的”。</p>
+<h3 id="123">12.3 线上问题排查时，最怕“无法复现”<a class="headerlink" href="#123" title="Permanent link">&para;</a></h3>
+<p>如果某个用户说：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>昨天还能答，今天不行了。
+</span></code></pre></div>
+<p>你至少要能回放出：</p>
+<ul>
+<li>当时请求内容</li>
+<li>对应系统配置</li>
+<li>对应 prompt 版本</li>
+<li>对应模型和知识版本</li>
+</ul>
+<p>否则你只能靠猜。</p>
+<h2 id="13">13. 发布、灰度与回滚：别一次把全量用户变成测试集<a class="headerlink" href="#13" title="Permanent link">&para;</a></h2>
+<p>大模型系统的发布风险，往往比普通前端文案更新高得多。</p>
+<p>因为一个很小的改动，都可能带来行为级变化。</p>
+<h3 id="131">13.1 哪些改动都应该视为“高风险改动”<a class="headerlink" href="#131" title="Permanent link">&para;</a></h3>
+<ul>
+<li>更换模型</li>
+<li>修改 system prompt</li>
+<li>调整检索逻辑</li>
+<li>更新工具 schema</li>
+<li>修改上下文拼接方式</li>
+<li>放宽安全策略</li>
+</ul>
+<p>这些改动都可能让系统行为发生明显偏移。</p>
+<h3 id="132">13.2 灰度发布的基本思路<a class="headerlink" href="#132" title="Permanent link">&para;</a></h3>
+<p>一个比较稳妥的流程通常是：</p>
+<ol>
+<li>本地验证</li>
+<li>离线评估</li>
+<li>小流量灰度</li>
+<li>观察线上指标</li>
+<li>逐步放量</li>
+<li>异常时快速回滚</li>
+</ol>
+<h3 id="133">13.3 回滚能力比“自信上线”更重要<a class="headerlink" href="#133" title="Permanent link">&para;</a></h3>
+<p>你不可能保证每次升级都更好。</p>
+<p>所以成熟系统一定要具备：</p>
+<ul>
+<li>prompt 回滚</li>
+<li>配置回滚</li>
+<li>模型回滚</li>
+<li>索引回滚或版本切换</li>
+</ul>
+<p>很多事故并不是因为团队不会优化，而是因为：</p>
+<p><strong>出问题时退不回去。</strong></p>
+<h2 id="14-rag-agent">14. RAG 和 Agent 上线后，风险会进一步放大<a class="headerlink" href="#14-rag-agent" title="Permanent link">&para;</a></h2>
+<p>第 17 章已经提过 Agent 的失败模式。<br />
+到了 production，这些问题通常不只是“答错”，而是会演化成真正的工程风险。</p>
+<h3 id="141-rag">14.1 RAG 的线上典型风险<a class="headerlink" href="#141-rag" title="Permanent link">&para;</a></h3>
+<ul>
+<li>索引没有及时更新，导致回答过时</li>
+<li>检索命中看似相关，但关键证据缺失</li>
+<li>文档权限控制不严，导致越权召回</li>
+<li>citation 看起来像真的，但指向不准确</li>
+</ul>
+<h3 id="142-agent">14.2 Agent 的线上典型风险<a class="headerlink" href="#142-agent" title="Permanent link">&para;</a></h3>
+<ul>
+<li>误选工具</li>
+<li>参数生成错误</li>
+<li>工具链路超时</li>
+<li>步数膨胀</li>
+<li>prompt injection 诱导越权操作</li>
+<li>在不该执行时执行了真实动作</li>
+</ul>
+<h3 id="143-guardrails">14.3 所以 guardrails 必须成为系统的一部分<a class="headerlink" href="#143-guardrails" title="Permanent link">&para;</a></h3>
+<p>常见做法包括：</p>
+<ul>
+<li>工具白名单</li>
+<li>参数 schema 校验</li>
+<li>高风险操作人工确认</li>
+<li>最大步数与预算上限</li>
+<li>输出审核与策略拦截</li>
+<li>权限隔离与租户隔离</li>
+</ul>
+<p>这里最重要的 mindset 是：</p>
+<p><strong>不要把安全希望寄托在模型“自己会懂”。</strong></p>
+<h2 id="15">15. 一个最小可用的生产化方案<a class="headerlink" href="#15" title="Permanent link">&para;</a></h2>
+<p>如果你现在要做一个“求职级别能讲清楚”的项目，不需要一开始就上特别复杂的基础设施。</p>
+<p>你可以先做一个最小但完整的方案：</p>
+<h3 id="151">15.1 场景<a class="headerlink" href="#151" title="Permanent link">&para;</a></h3>
+<p>一个课程资料问答助手，支持：</p>
+<ul>
+<li>课程文档问答</li>
+<li>带引用回答</li>
+<li>简单工具调用，例如表格计算或 FAQ 查询</li>
+</ul>
+<h3 id="152">15.2 技术结构<a class="headerlink" href="#152" title="Permanent link">&para;</a></h3>
+<ul>
+<li>前端：Streamlit 或 React</li>
+<li>服务层：FastAPI</li>
+<li>检索层：向量库 + rerank</li>
+<li>模型层：一个主回答模型 + 一个便宜分类模型</li>
+<li>存储层：文档库、日志库、配置版本</li>
+<li>观测层：请求日志、延迟监控、简单评估面板</li>
+</ul>
+<h3 id="153">15.3 最低限度要补齐的工程能力<a class="headerlink" href="#153" title="Permanent link">&para;</a></h3>
+<ol>
+<li>每个请求记录 prompt/model/retrieval/version</li>
+<li>每个回答记录引用文档和耗时</li>
+<li>每天抽样人工检查一批结果</li>
+<li>新 prompt 上线前先跑固定测试集</li>
+<li>出现异常时能一键切回旧版本</li>
+</ol>
+<p>这套东西看起来不花哨，但非常能体现你已经开始用“产品系统”而不是“实验脚本”的视角做事。</p>
+<h2 id="16-llmops">16. 面试里怎么讲 LLMOps<a class="headerlink" href="#16-llmops" title="Permanent link">&para;</a></h2>
+<p>如果面试官问你：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>你怎么理解 LLMOps？
+</span></code></pre></div>
+<p>你不要只回答“就是大模型版的 MLOps”。</p>
+<p>更好的讲法是按下面这个逻辑展开。</p>
+<h3 id="161">16.1 先讲它解决什么问题<a class="headerlink" href="#161" title="Permanent link">&para;</a></h3>
+<p>LLMOps 解决的是大模型应用从 demo 走向 production 之后的一系列工程问题，包括部署、评估、监控、版本管理、成本控制和发布回滚。</p>
+<h3 id="162">16.2 再讲为什么它比传统服务更难<a class="headerlink" href="#162" title="Permanent link">&para;</a></h3>
+<p>因为 LLM 系统往往：</p>
+<ul>
+<li>输出不完全确定</li>
+<li>质量难以直接度量</li>
+<li>prompt 和上下文会显著影响行为</li>
+<li>成本、延迟和质量强耦合</li>
+<li>RAG、Agent、工具调用会让链路更长</li>
+</ul>
+<h3 id="163">16.3 再讲你会关注哪些核心模块<a class="headerlink" href="#163" title="Permanent link">&para;</a></h3>
+<p>你可以说你会重点关注：</p>
+<ol>
+<li>推理服务与容量规划</li>
+<li>prompt / model / config 版本管理</li>
+<li>offline + online 评估体系</li>
+<li>日志、trace、告警与质量监控</li>
+<li>灰度发布、回滚与预算控制</li>
+</ol>
+<h3 id="164">16.4 最后给一个实际判断<a class="headerlink" href="#164" title="Permanent link">&para;</a></h3>
+<p>真正有工程感的回答，通常会落到一句很朴素的话上：</p>
+<p><strong>LLMOps 不是让模型更聪明，而是让系统更可控。</strong></p>
+<h2 id="17">17. 本章小结<a class="headerlink" href="#17" title="Permanent link">&para;</a></h2>
+<p>这一章其实是在回答全书最后一个很现实的问题：</p>
+<p><strong>当你已经能把模型、RAG、Agent 做出来之后，怎样让它真正稳定地服务真实用户。</strong></p>
+<p>你应该已经建立起这样的整体认识：</p>
+<ul>
+<li>大模型应用上线后，问题不再只是“答不答得对”</li>
+<li>还包括延迟、吞吐、预算、权限、回滚、监控和持续评估</li>
+<li>LLMOps 管理的对象，不只是模型，而是整条推理与决策链路</li>
+<li>生产系统里最重要的能力之一，不是某次 demo 很惊艳，而是长期可观测、可评估、可回退、可迭代</li>
+</ul>
+<p>如果把全书后半段连起来看，可以得到一条比较完整的工程路径：</p>
+<ul>
+<li>第 12 到第 14 章告诉你模型怎样被微调和对齐</li>
+<li>第 15 和第 16 章告诉你模型怎样接入外部知识</li>
+<li>第 17 章告诉你模型怎样调用外部工具完成任务</li>
+<li>本章告诉你这些能力怎样被真正部署成一个能上线、能维护、能迭代的系统</li>
+</ul>
+<p>到这里，这本书的主线也就基本闭环了：</p>
+<p><strong>从模型原理，到训练微调，到应用工程，再到生产化落地。</strong></p>
+<p>如果你能把这条链路讲清楚、做出最小项目、并知道每一层常见坑在哪里，那么你就已经不再只是“会调 API”，而是开始具备真正的大模型工程视角。</p>
+<h2 id="18">18. 练习题<a class="headerlink" href="#18" title="Permanent link">&para;</a></h2>
+<ol>
+<li>为什么一个本地效果不错的 RAG 系统，上线后仍然可能用户体验很差？</li>
+<li>请你分别解释 offline eval 和 online eval 更适合解决什么问题。</li>
+<li>如果一个 Agent 系统线上成本突然暴涨，你会优先排查哪些环节？</li>
+<li>为什么说 prompt、retrieval config、tool schema 都应该版本化？</li>
+<li>请设计一个最小可用的 LLM 生产系统，并说明你会监控哪些核心指标。</li>
+</ol>
+<h2 id="19">19. 面试题<a class="headerlink" href="#19" title="Permanent link">&para;</a></h2>
+<ol>
+<li>什么是 LLMOps？它和传统 MLOps 有什么联系和区别？</li>
+<li>为什么说大模型系统上线后的难点，不只是模型效果本身？</li>
+<li>线上大模型服务常见的性能优化手段有哪些？</li>
+<li>如何理解质量、延迟、成本三者之间的权衡？</li>
+<li>offline eval、online eval、人工抽检三者应该如何配合？</li>
+<li>如果一次 prompt 改动让线上回答质量下降，你会怎样定位和回滚？</li>
+<li>在 RAG 或 Agent 系统里，你认为最需要优先监控的指标有哪些，为什么？</li>
+</ol>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Ferris-Liu" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "navigation.instant", "navigation.instant.progress", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

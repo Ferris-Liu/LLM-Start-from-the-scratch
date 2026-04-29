@@ -1,0 +1,3629 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="一个AI炼丹师的大模型学习笔记，从 Transformer、预训练、微调到 RAG、Agent 与部署实践。">
+      
+      
+        <meta name="author" content="FerrisLIU">
+      
+      
+        <link rel="canonical" href="https://ferris-liu.github.io/LLM-Start-from-the-scratch/book/08-tokenizer-data/">
+      
+      
+        <link rel="prev" href="../07-mini-gpt/">
+      
+      
+        <link rel="next" href="../09-pretraining/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第 8 章：Tokenizer 与数据处理 - 机器于此理解语言</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#8-tokenizer" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="机器于此理解语言" class="md-header__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器于此理解语言
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第 8 章：Tokenizer 与数据处理
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到浅色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换到浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换到深色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="机器于此理解语言" class="md-nav__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器于此理解语言
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about-author/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    作者介绍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前言
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何阅读这本书
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书提纲与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    从这里开始
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    从这里开始
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书导航
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    全书导航
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-role-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 0 章：大模型岗位地图与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 1 · 基础补齐
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 1 · 基础补齐
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pytorch-training-loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 2 章：PyTorch 与训练循环
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-nlp-text-representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 3 章：NLP 基础与文本表示
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-ngram-to-neural-lm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章：从 n-gram 到神经语言模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 3 · Transformer 核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 3 · Transformer 核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-transformer-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章：Transformer 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章：Tokenizer 与数据处理
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章：Tokenizer 与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 为什么模型不能直接读取文本
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Tokenizer 的核心概念
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Tokenizer 的核心概念">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 token 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-vocabulary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 vocabulary 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-special-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 special tokens 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-llm-subword" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 为什么现代 LLM 更偏向 subword
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 为什么现代 LLM 更偏向 subword">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-word-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 word-level 的问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-char-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 char-level 的问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-subword" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 subword 的折中
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 三类主流 tokenizer 方法
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 三类主流 tokenizer 方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-bpebyte-pair-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 BPE：Byte Pair Encoding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-wordpiece" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 WordPiece
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-sentencepiece" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 SentencePiece
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 这一节应该记住什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 从一句文本到训练样本
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. 从一句文本到训练样本">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-raw-text-token-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 从 raw text 到 token ids
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-token-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 从 token ids 到训练窗口
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-shift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 为什么要 shift
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-paddingtruncationattention-maskpacking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. padding、truncation、attention mask、packing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. padding、truncation、attention mask、packing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-padding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 为什么需要 padding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-truncation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 什么是 truncation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-attention-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 attention mask 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-attention-mask-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 attention mask 和 causal mask 不是一回事
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#85-packing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 什么是 packing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 中文、英文和代码为什么会切得不一样
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 中文、英文和代码为什么会切得不一样">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 中文
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 英文
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 代码
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 一个最小代码实验
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 一个最小代码实验">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 用现成 tokenizer 看分词结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-bpe-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 训练一个最小 BPE tokenizer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-mini-gpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 如何把它接到 Mini-GPT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：tokenizer 就是分词工具
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：一个 token 大致就等于一个词
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3attention-mask-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：attention mask 和 causal mask 是同一个东西
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 4：词表越大越好
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-llm-subword-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：为什么现代 LLM 大多采用 subword tokenizer？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2bpe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：BPE 的核心思想是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3padding-mask-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：padding mask 和 causal mask 的区别是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：为什么 tokenizer 会影响代码模型效果？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-pretraining/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 9 章：预训练 Pretraining
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-scaling-law/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 10 章：Scaling Law 与大模型为什么变大
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 11 章：LLM 评估
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 5 · 后训练与微调
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 5 · 后训练与微调
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-sft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 12 章：Supervised Fine-Tuning，SFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-lora-qlora-peft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 13 章：参数高效微调：LoRA / QLoRA / PEFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 14 章：偏好对齐：RLHF / DPO / RLAIF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 6 · LLM 应用工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 6 · LLM 应用工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-embedding-retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 15 章：Embedding、向量数据库与语义检索
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-llmops-deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 18 章：LLMOps、部署与生产化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前沿技术观察
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    前沿技术观察
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_tech/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术条目池
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    分析报告索引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/reports/deepseek-v4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek-V4 技术分析报告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/_report_template/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通用报告模板
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 为什么模型不能直接读取文本
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Tokenizer 的核心概念
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Tokenizer 的核心概念">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 token 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-vocabulary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 vocabulary 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-special-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 special tokens 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-llm-subword" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 为什么现代 LLM 更偏向 subword
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 为什么现代 LLM 更偏向 subword">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-word-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 word-level 的问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-char-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 char-level 的问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-subword" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 subword 的折中
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 三类主流 tokenizer 方法
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 三类主流 tokenizer 方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-bpebyte-pair-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 BPE：Byte Pair Encoding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-wordpiece" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 WordPiece
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-sentencepiece" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 SentencePiece
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 这一节应该记住什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 从一句文本到训练样本
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. 从一句文本到训练样本">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-raw-text-token-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 从 raw text 到 token ids
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-token-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 从 token ids 到训练窗口
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-shift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 为什么要 shift
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-paddingtruncationattention-maskpacking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. padding、truncation、attention mask、packing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. padding、truncation、attention mask、packing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-padding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 为什么需要 padding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-truncation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 什么是 truncation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-attention-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 attention mask 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-attention-mask-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 attention mask 和 causal mask 不是一回事
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#85-packing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 什么是 packing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 中文、英文和代码为什么会切得不一样
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 中文、英文和代码为什么会切得不一样">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 中文
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 英文
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 代码
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 一个最小代码实验
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 一个最小代码实验">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 用现成 tokenizer 看分词结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-bpe-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 训练一个最小 BPE tokenizer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-mini-gpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 如何把它接到 Mini-GPT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：tokenizer 就是分词工具
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：一个 token 大致就等于一个词
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3attention-mask-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：attention mask 和 causal mask 是同一个东西
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 4：词表越大越好
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-llm-subword-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：为什么现代 LLM 大多采用 subword tokenizer？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2bpe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：BPE 的核心思想是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3padding-mask-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：padding mask 和 causal mask 的区别是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-tokenizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：为什么 tokenizer 会影响代码模型效果？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/edit/main/docs/book/08-tokenizer-data.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="8-tokenizer">第 8 章：Tokenizer 与训练数据入口<a class="headerlink" href="#8-tokenizer" title="Permanent link">&para;</a></h1>
+<h2 id="1">1. 本章要解决的问题<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>第 7 章里，我们已经从零实现了一个最小的 Mini-GPT。</p>
+<p>但当我们真的准备训练它时，马上会遇到一个很现实的问题：</p>
+<p><strong>自然语言文本到底是怎么变成模型能吃进去的张量的？</strong></p>
+<p>模型并不认识“句子”“单词”或者“汉字的含义”。</p>
+<p>它真正接收的输入是：</p>
+<ul>
+<li>一串离散 token id</li>
+<li>对应的 attention mask</li>
+<li>在训练时还要有 labels</li>
+</ul>
+<p>所以这一章要回答的，不只是“Tokenizer 是什么”，而是更完整的问题：</p>
+<p><strong>从原始文本到可训练样本，中间到底发生了什么？</strong></p>
+<p>这件事在全书结构里有三个作用：</p>
+<ul>
+<li>它承接第 7 章，把 Mini-GPT 从“模型定义”推进到“可以吃数据训练”</li>
+<li>它为第 9 章的预训练流程铺路</li>
+<li>它也会让你第一次真正理解，数据处理并不是训练前的边角料，而是语言模型系统的一部分</li>
+</ul>
+<p>如果第 7 章的主角是：</p>
+<p><strong>模型结构本身。</strong></p>
+<p>那么第 8 章的主角就是：</p>
+<p><strong>文本如何被变成模型训练所需的输入格式。</strong></p>
+<h2 id="2">2. 你学完后应该会什么<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>能解释 token、vocabulary、special token 分别是什么</li>
+<li>能说清为什么现代 LLM 大多使用 subword tokenizer</li>
+<li>能区分 BPE、WordPiece 和 SentencePiece 的核心思路</li>
+<li>能把原始文本变成 <code>input_ids</code>、<code>labels</code> 和 <code>attention_mask</code></li>
+<li>能理解 padding、truncation、packing 在训练中的作用</li>
+<li>能把这一章的数据流程和第 7 章的 Mini-GPT 接起来</li>
+</ul>
+<h2 id="3">3. 为什么模型不能直接读取文本<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p>人看到一句话：</p>
+<p><code>I love deep learning</code></p>
+<p>会自然理解这是 4 个英文单词组成的句子。</p>
+<p>但神经网络不会这样想。</p>
+<p>对模型来说，输入最终必须是数值张量。也就是说，在进入 embedding 层之前，文本必须先被映射成某种离散符号序列：</p>
+<div class="arithmatex">\[
+\text{text} \rightarrow \text{tokens} \rightarrow \text{token ids}
+\]</div>
+<p>这里的 tokenizer，本质上就是一个“翻译器”：</p>
+<ul>
+<li>输入是字符串</li>
+<li>输出是 token 序列</li>
+<li>再进一步映射成词表中的整数 id</li>
+</ul>
+<p>例如，一句文本可能会被切成：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>[&quot;I&quot;, &quot; love&quot;, &quot; deep&quot;, &quot; learning&quot;]
+</span></code></pre></div>
+<p>然后再映射成：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>[40, 1842, 2387, 7123]
+</span></code></pre></div>
+<p>后面的 embedding 层才会把这些 id 查表变成向量。</p>
+<p>所以 tokenizer 的作用并不是“附属小工具”，而是：</p>
+<p><strong>语言进入模型世界的入口。</strong></p>
+<p>如果没有 tokenizer，后面的 embedding、attention、loss 计算都无从谈起。</p>
+<h2 id="4-tokenizer">4. Tokenizer 的核心概念<a class="headerlink" href="#4-tokenizer" title="Permanent link">&para;</a></h2>
+<h3 id="41-token">4.1 token 是什么<a class="headerlink" href="#41-token" title="Permanent link">&para;</a></h3>
+<p>token 可以理解成：</p>
+<p><strong>模型处理文本时使用的最小离散单元。</strong></p>
+<p>这个单元不一定等于：</p>
+<ul>
+<li>一个单词</li>
+<li>一个汉字</li>
+<li>一个字符</li>
+</ul>
+<p>在现代 LLM 里，token 更常见的是 subword，也就是“子词片段”。</p>
+<p>例如：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>unbelievable
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>-&gt; [&quot;un&quot;, &quot;believ&quot;, &quot;able&quot;]
+</span></code></pre></div>
+<p>或者：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ChatGPT is amazing
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>-&gt; [&quot;Chat&quot;, &quot;G&quot;, &quot;PT&quot;, &quot; is&quot;, &quot; amazing&quot;]
+</span></code></pre></div>
+<h3 id="42-vocabulary">4.2 vocabulary 是什么<a class="headerlink" href="#42-vocabulary" title="Permanent link">&para;</a></h3>
+<p>vocabulary，也就是词表，是 tokenizer 允许使用的全部 token 集合。</p>
+<p>每个 token 都会有一个唯一 id：</p>
+<div class="arithmatex">\[
+\text{token} \leftrightarrow \text{id}
+\]</div>
+<p>例如：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>&quot;hello&quot; -&gt; 15496
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>&quot; world&quot; -&gt; 995
+</span></code></pre></div>
+<p>模型真正训练的并不是字符串，而是这些 id 所对应的 embedding 参数。</p>
+<h3 id="43-special-tokens">4.3 special tokens 是什么<a class="headerlink" href="#43-special-tokens" title="Permanent link">&para;</a></h3>
+<p>除了普通文本 token，模型里通常还会有一些特殊 token，例如：</p>
+<ul>
+<li><code>BOS</code>：begin of sequence，序列开始</li>
+<li><code>EOS</code>：end of sequence，序列结束</li>
+<li><code>PAD</code>：padding token，用来把 batch 补齐到相同长度</li>
+<li><code>UNK</code>：unknown token，表示未知 token</li>
+</ul>
+<p>不同模型是否使用这些 token、具体 id 是多少，可能并不相同。</p>
+<p>例如 GPT 系列常常不依赖 <code>PAD</code> 做预训练，而 BERT 类模型通常更明确地使用 padding 和 segment 相关标记。</p>
+<p>这一点提醒我们：</p>
+<p><strong>tokenizer 从来不是脱离模型单独存在的。</strong></p>
+<p>它必须和模型训练目标、数据格式、推理方式一起看。</p>
+<h2 id="5-llm-subword">5. 为什么现代 LLM 更偏向 subword<a class="headerlink" href="#5-llm-subword" title="Permanent link">&para;</a></h2>
+<p>如果我们随便设计文本切分方式，看起来至少有三种选择：</p>
+<ul>
+<li>按词切</li>
+<li>按字符切</li>
+<li>按子词切</li>
+</ul>
+<p>为什么今天大多数 LLM 都更偏向 subword tokenizer？</p>
+<p>因为它在词级和字符级之间做了一个很好的工程折中。</p>
+<h3 id="51-word-level">5.1 word-level 的问题<a class="headerlink" href="#51-word-level" title="Permanent link">&para;</a></h3>
+<p>如果按“完整单词”建词表，会遇到两个明显问题。</p>
+<p>第一，词表会非常大。</p>
+<p>自然语言里有：</p>
+<ul>
+<li>词形变化</li>
+<li>专有名词</li>
+<li>拼写错误</li>
+<li>新词</li>
+<li>领域术语</li>
+</ul>
+<p>如果都作为独立单词处理，词表膨胀会非常快。</p>
+<p>第二，会有严重的 OOV 问题，也就是 out-of-vocabulary。</p>
+<p>只要测试时遇到没见过的新词，模型就很难处理。</p>
+<h3 id="52-char-level">5.2 char-level 的问题<a class="headerlink" href="#52-char-level" title="Permanent link">&para;</a></h3>
+<p>如果按字符切，OOV 问题确实会大幅缓解，因为几乎所有文本都能表示成字符序列。</p>
+<p>但代价是序列太长。</p>
+<p>例如一个英文单词按字符拆开后，token 数会明显上升，这会直接增加：</p>
+<ul>
+<li>序列长度</li>
+<li>attention 计算成本</li>
+<li>训练时间</li>
+</ul>
+<p>而且字符级 token 往往缺少足够语义，模型需要在更长上下文中自己重新组合出词和短语结构。</p>
+<h3 id="53-subword">5.3 subword 的折中<a class="headerlink" href="#53-subword" title="Permanent link">&para;</a></h3>
+<p>subword 的核心想法是：</p>
+<p><strong>高频模式作为整体保留，低频词拆成更小片段。</strong></p>
+<p>这样就同时获得了几个优点：</p>
+<ul>
+<li>词表不会像 word-level 那样无限膨胀</li>
+<li>新词也能通过已有子词组合表示</li>
+<li>序列长度通常又不会像 char-level 那样夸张</li>
+</ul>
+<p>所以从工程角度看，subword 是一个非常自然的选择。</p>
+<h2 id="6-tokenizer">6. 三类主流 tokenizer 方法<a class="headerlink" href="#6-tokenizer" title="Permanent link">&para;</a></h2>
+<p>这一节不追求论文级细节，重点是建立“方法地图”。</p>
+<h3 id="61-bpebyte-pair-encoding">6.1 BPE：Byte Pair Encoding<a class="headerlink" href="#61-bpebyte-pair-encoding" title="Permanent link">&para;</a></h3>
+<p>BPE 是大模型里最常见、也最值得优先掌握的一类思路。</p>
+<p>它最早的直觉非常简单：</p>
+<ol>
+<li>先从较小粒度开始，例如字符或字节</li>
+<li>统计语料里最常一起出现的相邻 token 对</li>
+<li>把这个高频 token 对合并成一个新 token</li>
+<li>重复这个过程 many times，逐步长出词表</li>
+</ol>
+<p>例如一开始可能有：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>&quot;l&quot;, &quot;o&quot;, &quot;w&quot;
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>&quot;l&quot;, &quot;o&quot;, &quot;w&quot;, &quot;e&quot;, &quot;r&quot;
+</span></code></pre></div>
+<p>如果 <code>("l", "o")</code> 很常一起出现，就先合并成 <code>"lo"</code>。</p>
+<p>之后如果 <code>("lo", "w")</code> 也很高频，就继续合并成 <code>"low"</code>。</p>
+<p>这样，词表会逐步从小单位长出高频片段。</p>
+<p>BPE 的优点是：</p>
+<ul>
+<li>直观</li>
+<li>容易实现</li>
+<li>对高频模式压缩效果好</li>
+</ul>
+<p>它也解释了为什么很多 tokenizer 的输出看起来像“半个词、一个词根、再加一个后缀”。</p>
+<h3 id="62-wordpiece">6.2 WordPiece<a class="headerlink" href="#62-wordpiece" title="Permanent link">&para;</a></h3>
+<p>WordPiece 和 BPE 很像，也是在逐步构造 subword 词表。</p>
+<p>但它通常更强调：</p>
+<p><strong>哪种合并能在统计意义上更提升当前词表对语料的表示能力。</strong></p>
+<p>可以粗略理解成：</p>
+<ul>
+<li>BPE 更像“频次驱动合并”</li>
+<li>WordPiece 更像“概率收益驱动合并”</li>
+</ul>
+<p>在工程使用上，两者给人的体验有时很接近。</p>
+<h3 id="63-sentencepiece">6.3 SentencePiece<a class="headerlink" href="#63-sentencepiece" title="Permanent link">&para;</a></h3>
+<p>SentencePiece 更像是一套完整框架，而不只是一个单独算法名。</p>
+<p>它有两个很重要的特点：</p>
+<p>第一，它不强依赖空格分词。</p>
+<p>这对中文、日文、多语言场景很有价值，因为这些语言的“词边界”本来就不像英文那样天然清晰。</p>
+<p>第二，它可以直接把原始文本当作输入，再由内部规则完成训练和切分。</p>
+<p>很多现代多语言模型都使用 SentencePiece 或与其类似的方案。</p>
+<h3 id="64">6.4 这一节应该记住什么<a class="headerlink" href="#64" title="Permanent link">&para;</a></h3>
+<p>真正需要记住的不是每个算法的全部细节，而是：</p>
+<ul>
+<li>现代 LLM 主流是 subword tokenizer</li>
+<li>BPE 是最值得先掌握的基础方法</li>
+<li>多语言场景下，不依赖空格的 tokenizer 往往更自然</li>
+</ul>
+<h2 id="7">7. 从一句文本到训练样本<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<p>这一节是本章最重要的部分。</p>
+<p>因为从第 7 章的 Mini-GPT 视角看，我们最终关心的不是“tokenizer 的定义”，而是：</p>
+<p><strong>一段文本怎样变成 next-token prediction 的训练样本。</strong></p>
+<h3 id="71-raw-text-token-ids">7.1 从 raw text 到 token ids<a class="headerlink" href="#71-raw-text-token-ids" title="Permanent link">&para;</a></h3>
+<p>假设我们有一句文本：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>I love deep learning.
+</span></code></pre></div>
+<p>第一步是文本预处理。可能包括：</p>
+<ul>
+<li>去掉明显脏数据</li>
+<li>统一换行</li>
+<li>统一空白符</li>
+<li>按需要保留或删除特殊符号</li>
+</ul>
+<p>第二步是 tokenizer 编码：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>text
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>-&gt; tokens
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>-&gt; token ids
+</span></code></pre></div>
+<p>例如：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>[&quot;I&quot;, &quot; love&quot;, &quot; deep&quot;, &quot; learning&quot;, &quot;.&quot;]
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>-&gt; [40, 1842, 2387, 7123, 13]
+</span></code></pre></div>
+<h3 id="72-token-ids">7.2 从 token ids 到训练窗口<a class="headerlink" href="#72-token-ids" title="Permanent link">&para;</a></h3>
+<p>语言模型并不是一次训练整本书，而是把长文本切成一个个有限长度的训练窗口。</p>
+<p>假设最大上下文长度是 <code>block_size = 8</code>，一段更长的文本 ids 为：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>[5, 9, 12, 7, 20, 4, 8, 10, 6]
+</span></code></pre></div>
+<p>那么一个可能的训练窗口是：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>input_ids = [5, 9, 12, 7, 20, 4, 8, 10]
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>labels    = [9, 12, 7, 20, 4, 8, 10, 6]
+</span></code></pre></div>
+<p>你会发现：</p>
+<p><strong>labels 本质上就是 input 向左错开一位后的结果。</strong></p>
+<p>这正是 causal language modeling 的训练目标：</p>
+<p>给定前文，预测下一个 token。</p>
+<h3 id="73-shift">7.3 为什么要 shift<a class="headerlink" href="#73-shift" title="Permanent link">&para;</a></h3>
+<p>在位置 <code>t</code> 上，模型输入看到的是：</p>
+<div class="arithmatex">\[
+x_1, x_2, \dots, x_t
+\]</div>
+<p>它要预测的是：</p>
+<div class="arithmatex">\[
+x_{t+1}
+\]</div>
+<p>所以训练时常写成：</p>
+<div class="arithmatex">\[
+\mathcal{L} = - \sum_{t=1}^{T-1} \log p(x_{t+1} \mid x_{\le t})
+\]</div>
+<p>这就是第 9 章会正式展开的预训练目标。</p>
+<p>第 8 章先把数据层面的“shift”看懂，后面你就不会在 loss 计算那里突然断掉。</p>
+<h2 id="8-paddingtruncationattention-maskpacking">8. padding、truncation、attention mask、packing<a class="headerlink" href="#8-paddingtruncationattention-maskpacking" title="Permanent link">&para;</a></h2>
+<p>这几个概念经常一起出现，但很容易混淆。</p>
+<h3 id="81-padding">8.1 为什么需要 padding<a class="headerlink" href="#81-padding" title="Permanent link">&para;</a></h3>
+<p>现实里的文本长度不一样。</p>
+<p>例如一条样本长度是 32，另一条是 127。</p>
+<p>但 GPU 上做 batch 计算时，通常希望它们组成规则张量，所以需要把较短样本补到统一长度：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>[5, 9, 12]
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>-&gt; [5, 9, 12, PAD, PAD]
+</span></code></pre></div>
+<p>这就是 padding。</p>
+<h3 id="82-truncation">8.2 什么是 truncation<a class="headerlink" href="#82-truncation" title="Permanent link">&para;</a></h3>
+<p>如果一条样本太长，超过模型允许的最大长度，就要截断：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>[x1, x2, ..., x4096]
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>-&gt; keep first 1024 or last 1024
+</span></code></pre></div>
+<p>这就是 truncation。</p>
+<p>截断策略不是一个无关紧要的小细节，因为它会直接影响：</p>
+<ul>
+<li>模型能看到哪些上下文</li>
+<li>信息是否被截掉</li>
+<li>长文本训练样本如何构造</li>
+</ul>
+<h3 id="83-attention-mask">8.3 attention mask 是什么<a class="headerlink" href="#83-attention-mask" title="Permanent link">&para;</a></h3>
+<p>有了 padding 之后，模型不能把 <code>PAD</code> 当成真实内容去关注。</p>
+<p>所以我们需要一个 attention mask 来告诉模型：</p>
+<ul>
+<li>哪些位置是真实 token</li>
+<li>哪些位置只是补齐占位</li>
+</ul>
+<p>例如：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>input_ids      = [5, 9, 12, PAD, PAD]
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>attention_mask = [1, 1, 1, 0, 0]
+</span></code></pre></div>
+<p>这里的 <code>1</code> 表示可用位置，<code>0</code> 表示 padding 位置。</p>
+<h3 id="84-attention-mask-causal-mask">8.4 attention mask 和 causal mask 不是一回事<a class="headerlink" href="#84-attention-mask-causal-mask" title="Permanent link">&para;</a></h3>
+<p>这是面试和工程里都非常常见的混淆点。</p>
+<p>padding attention mask 解决的是：</p>
+<p><strong>哪些位置根本不是有效文本。</strong></p>
+<p>causal mask 解决的是：</p>
+<p><strong>当前 token 能不能偷看未来 token。</strong></p>
+<p>前者是“哪些位置存在”，后者是“存在的位置里哪些允许被看见”。</p>
+<h3 id="85-packing">8.5 什么是 packing<a class="headerlink" href="#85-packing" title="Permanent link">&para;</a></h3>
+<p>如果训练数据里有大量短文本，直接每条单独 padding 会浪费很多 token budget。</p>
+<p>例如：</p>
+<ul>
+<li>样本 A 长度 20</li>
+<li>样本 B 长度 18</li>
+<li>最大长度设成 128</li>
+</ul>
+<p>那么大量位置都在浪费。</p>
+<p>packing 的思路是：</p>
+<p><strong>把多条较短文本拼接进同一个训练序列里，提高有效 token 占比。</strong></p>
+<p>这在大规模预训练里很重要，因为训练成本往往按 token 计。</p>
+<p>换句话说，数据处理并不只是“准备一下输入”，它直接影响训练效率。</p>
+<h2 id="9">9. 中文、英文和代码为什么会切得不一样<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<p>如果只看英文例子，很容易误以为 tokenizer 的问题很简单。</p>
+<p>但一进入中文、多语言和代码场景，很多现象就会变得明显。</p>
+<h3 id="91">9.1 中文<a class="headerlink" href="#91" title="Permanent link">&para;</a></h3>
+<p>中文天然没有空格分词边界。</p>
+<p>例如：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>我喜欢机器学习
+</span></code></pre></div>
+<p>它可以被切成：</p>
+<ul>
+<li>字级片段</li>
+<li>多字词片段</li>
+<li>更灵活的 subword 组合</li>
+</ul>
+<p>这也是为什么很多中文或多语言模型更适合使用 SentencePiece 一类不依赖空格的方案。</p>
+<h3 id="92">9.2 英文<a class="headerlink" href="#92" title="Permanent link">&para;</a></h3>
+<p>英文虽然有空格，但“空格分开”并不等于“最适合建模的 token 边界”。</p>
+<p>例如：</p>
+<ul>
+<li>词根和后缀可以拆分</li>
+<li>低频长词可以拆成多个 subword</li>
+<li>标点和前后空格也可能被编码进 token 规则里</li>
+</ul>
+<p>所以很多英文 tokenizer 输出里，你会看到像 <code>" hello"</code> 这样带前导空格的 token。</p>
+<h3 id="93">9.3 代码<a class="headerlink" href="#93" title="Permanent link">&para;</a></h3>
+<p>代码和自然语言又不一样。</p>
+<p>代码里大量有意义的模式来自：</p>
+<ul>
+<li>缩进</li>
+<li>括号</li>
+<li>运算符</li>
+<li>下划线</li>
+<li>驼峰命名</li>
+<li>重复的 API 名称</li>
+</ul>
+<p>因此代码模型往往对 tokenizer 设计更敏感，因为一个糟糕的切分方式会破坏程序结构信号。</p>
+<p>这也是为什么“同样的模型结构”，面对代码任务时 tokenizer 往往会明显影响效果。</p>
+<h2 id="10">10. 一个最小代码实验<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<p>这一节不追求工业级完整训练，只做两个最小实验。</p>
+<h3 id="101-tokenizer">10.1 用现成 tokenizer 看分词结果<a class="headerlink" href="#101-tokenizer" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoTokenizer</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;gpt2&quot;</span><span class="p">)</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;I love deep learning. 我也喜欢大模型。&quot;</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="n">encoded</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="nb">print</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="nb">print</span><span class="p">(</span><span class="n">encoded</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">])</span>
+</span></code></pre></div>
+<p>你可以观察几件事：</p>
+<ul>
+<li>英文 token 往往不是按“完整单词”切</li>
+<li>中英文混合时，token 长度分布并不均匀</li>
+<li><code>input_ids</code> 才是后续模型真正消费的输入</li>
+</ul>
+<h3 id="102-bpe-tokenizer">10.2 训练一个最小 BPE tokenizer<a class="headerlink" href="#102-bpe-tokenizer" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tokenizers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tokenizer</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">trainers</span><span class="p">,</span> <span class="n">pre_tokenizers</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">Tokenizer</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">BPE</span><span class="p">())</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">tokenizer</span><span class="o">.</span><span class="n">pre_tokenizer</span> <span class="o">=</span> <span class="n">pre_tokenizers</span><span class="o">.</span><span class="n">Whitespace</span><span class="p">()</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="n">trainer</span> <span class="o">=</span> <span class="n">trainers</span><span class="o">.</span><span class="n">BpeTrainer</span><span class="p">(</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>    <span class="n">vocab_size</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>    <span class="n">special_tokens</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;[PAD]&quot;</span><span class="p">,</span> <span class="s2">&quot;[UNK]&quot;</span><span class="p">,</span> <span class="s2">&quot;[BOS]&quot;</span><span class="p">,</span> <span class="s2">&quot;[EOS]&quot;</span><span class="p">]</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="p">)</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;corpus.txt&quot;</span><span class="p">]</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="n">tokenizer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">trainer</span><span class="p">)</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;I love large language models&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">tokens</span><span class="p">)</span>
+</span></code></pre></div>
+<p>这个实验的价值不在于训出一个强 tokenizer，而在于你会第一次真正看到：</p>
+<ul>
+<li>词表是怎么从语料长出来的</li>
+<li>高频片段为什么会逐渐形成稳定 token</li>
+<li>tokenizer 不是固定天降的，它本身也是训练出来的</li>
+</ul>
+<h2 id="11-mini-gpt">11. 如何把它接到 Mini-GPT<a class="headerlink" href="#11-mini-gpt" title="Permanent link">&para;</a></h2>
+<p>到了这里，第 7 章的 Mini-GPT 就终于能真正“接数据”了。</p>
+<p>最小数据集类通常要做的事情是：</p>
+<ol>
+<li>读取原始文本</li>
+<li>用 tokenizer 编码成 ids</li>
+<li>切成固定长度窗口</li>
+<li>返回 <code>input_ids</code> 和 <code>labels</code></li>
+</ol>
+<p>一个最小示意代码如下：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">LMDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token_ids</span><span class="p">,</span> <span class="n">block_size</span><span class="p">):</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">token_ids</span> <span class="o">=</span> <span class="n">token_ids</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">=</span> <span class="n">block_size</span>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">token_ids</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span>
+</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>
+</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>        <span class="n">chunk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_ids</span><span class="p">[</span><span class="n">idx</span><span class="p">:</span> <span class="n">idx</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">chunk</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a>        <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">chunk</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</span></code></pre></div>
+<p>这段代码虽然很短，却连接了前后两章：</p>
+<ul>
+<li>第 7 章负责定义模型</li>
+<li>第 8 章负责把文本变成训练样本</li>
+<li>第 9 章负责把样本真正送进训练循环并优化参数</li>
+</ul>
+<h2 id="12">12. 常见误区<a class="headerlink" href="#12" title="Permanent link">&para;</a></h2>
+<h3 id="1tokenizer">误区 1：tokenizer 就是分词工具<a class="headerlink" href="#1tokenizer" title="Permanent link">&para;</a></h3>
+<p>这不够准确。</p>
+<p>Tokenizer 不只是“把一句话切开”，它还定义了：</p>
+<ul>
+<li>词表</li>
+<li>特殊 token</li>
+<li>文本到 id 的映射方式</li>
+<li>后续数据格式</li>
+</ul>
+<p>它是整个训练系统的一部分。</p>
+<h3 id="2-token">误区 2：一个 token 大致就等于一个词<a class="headerlink" href="#2-token" title="Permanent link">&para;</a></h3>
+<p>这通常不成立。</p>
+<p>一个 token 可能是：</p>
+<ul>
+<li>半个词</li>
+<li>一个前缀</li>
+<li>一个标点</li>
+<li>一个字节片段</li>
+</ul>
+<p>所以 token 数和字数、词数不能直接画等号。</p>
+<h3 id="3attention-mask-causal-mask">误区 3：attention mask 和 causal mask 是同一个东西<a class="headerlink" href="#3attention-mask-causal-mask" title="Permanent link">&para;</a></h3>
+<p>不是。</p>
+<p>padding mask 处理的是无效位置，causal mask 处理的是未来信息泄漏。</p>
+<p>两者经常同时存在，但含义完全不同。</p>
+<h3 id="4">误区 4：词表越大越好<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
+<p>词表太小会导致序列变长，词表太大又会增加 embedding 和输出层规模。</p>
+<p>词表大小是一个工程权衡，不是越大越先进。</p>
+<h2 id="13">13. 面试问题<a class="headerlink" href="#13" title="Permanent link">&para;</a></h2>
+<h3 id="q1-llm-subword-tokenizer">Q1：为什么现代 LLM 大多采用 subword tokenizer？<a class="headerlink" href="#q1-llm-subword-tokenizer" title="Permanent link">&para;</a></h3>
+<p>因为它兼顾了词级方法的语义完整性和字符级方法的开放词表能力，是词表大小、OOV 风险和序列长度之间的工程折中。</p>
+<h3 id="q2bpe">Q2：BPE 的核心思想是什么？<a class="headerlink" href="#q2bpe" title="Permanent link">&para;</a></h3>
+<p>从较小粒度开始，反复合并语料中高频共现的 token 对，逐步构造出更适合语料分布的 subword 词表。</p>
+<h3 id="q3padding-mask-causal-mask">Q3：padding mask 和 causal mask 的区别是什么？<a class="headerlink" href="#q3padding-mask-causal-mask" title="Permanent link">&para;</a></h3>
+<p>padding mask 用来屏蔽补齐位置，causal mask 用来防止当前位置看到未来 token。一个解决“哪些位置有效”，一个解决“有效位置中哪些允许被看见”。</p>
+<h3 id="q4-tokenizer">Q4：为什么 tokenizer 会影响代码模型效果？<a class="headerlink" href="#q4-tokenizer" title="Permanent link">&para;</a></h3>
+<p>因为代码里有大量结构化符号和重复模式。若切分方式破坏了变量名、运算符和语法边界，模型就更难捕捉程序结构。</p>
+<h2 id="14">14. 本章小结<a class="headerlink" href="#14" title="Permanent link">&para;</a></h2>
+<p>这一章最核心的收获，不是记住几个 tokenizer 名字，而是建立下面这条完整主线：</p>
+<div class="arithmatex">\[
+\text{raw text}
+\rightarrow \text{tokenizer}
+\rightarrow \text{token ids}
+\rightarrow \text{training samples}
+\rightarrow \text{Mini-GPT input}
+\]</div>
+<p>从这里开始，我们已经具备了进入预训练的最后一块基础。</p>
+<p>下一章会正式回答：</p>
+<p><strong>当模型、tokenizer 和训练样本都准备好以后，一个最小的 GPT 预训练流程到底怎样跑起来？</strong></p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Ferris-Liu" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "navigation.instant", "navigation.instant.progress", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

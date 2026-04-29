@@ -1,0 +1,3646 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="一个AI炼丹师的大模型学习笔记，从 Transformer、预训练、微调到 RAG、Agent 与部署实践。">
+      
+      
+        <meta name="author" content="FerrisLIU">
+      
+      
+        <link rel="canonical" href="https://ferris-liu.github.io/LLM-Start-from-the-scratch/book/05-attention/">
+      
+      
+        <link rel="prev" href="../04-ngram-to-neural-lm/">
+      
+      
+        <link rel="next" href="../06-transformer-architecture/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Transformer 入口 - 机器于此理解语言</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#5-attention" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="机器于此理解语言" class="md-header__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器于此理解语言
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Transformer 入口
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到浅色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换到浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换到深色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="机器于此理解语言" class="md-nav__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器于此理解语言
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about-author/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    作者介绍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前言
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何阅读这本书
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书提纲与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    从这里开始
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    从这里开始
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 核心直觉
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 核心直觉">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 没有 Attention 时会发生什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Attention 的一句话直觉
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 一个最小例子
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 数学定义
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 数学定义">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-qkv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Q、K、V 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 注意力分数怎么来
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-sqrtd_k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 为什么要除以 \( \sqrt{d_k} \)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 softmax 在做什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 从直觉到实现
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 从直觉到实现">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 第一步：输入序列先变成向量
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 第二步：算每个位置对所有位置的相关性
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-mask-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 第三步：做 mask 和 softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 第四步：按权重汇总 value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-self-attentioncross-attention-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Self-Attention、Cross-Attention 与 Causal Mask
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Self-Attention、Cross-Attention 与 Causal Mask">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-self-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Self-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-cross-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Cross-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-causal-mask-gpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Causal Mask 为什么是 GPT 的关键约束
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-multi-head-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Multi-Head Attention 为什么有用
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 最小代码实现
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：Attention 就是在“找到最重要的一个词”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2qkv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：Q、K、V 是三份不同输入
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：有了 Attention，模型就天然懂长程依赖
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 4：attention 权重越可解释，模型就越好
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：为什么 Attention 比固定窗口或单向压缩上下文更强？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-scaled-dot-product-attention-sqrtd_k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：为什么 scaled dot-product attention 里要除以 \( \sqrt{d_k} \)？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3self-attention-cross-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：self-attention 和 cross-attention 的区别是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4gpt-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：GPT 为什么一定要用 causal mask？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5multi-head-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：multi-head attention 的价值是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书导航
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    全书导航
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-role-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 0 章：大模型岗位地图与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 1 · 基础补齐
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 1 · 基础补齐
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pytorch-training-loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 2 章：PyTorch 与训练循环
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-nlp-text-representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 3 章：NLP 基础与文本表示
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-ngram-to-neural-lm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章：从 n-gram 到神经语言模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 3 · Transformer 核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 3 · Transformer 核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 核心直觉
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 核心直觉">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 没有 Attention 时会发生什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Attention 的一句话直觉
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 一个最小例子
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 数学定义
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 数学定义">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-qkv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Q、K、V 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 注意力分数怎么来
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-sqrtd_k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 为什么要除以 \( \sqrt{d_k} \)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 softmax 在做什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 从直觉到实现
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 从直觉到实现">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 第一步：输入序列先变成向量
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 第二步：算每个位置对所有位置的相关性
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-mask-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 第三步：做 mask 和 softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 第四步：按权重汇总 value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-self-attentioncross-attention-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Self-Attention、Cross-Attention 与 Causal Mask
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Self-Attention、Cross-Attention 与 Causal Mask">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-self-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Self-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-cross-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Cross-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-causal-mask-gpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Causal Mask 为什么是 GPT 的关键约束
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-multi-head-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Multi-Head Attention 为什么有用
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 最小代码实现
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：Attention 就是在“找到最重要的一个词”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2qkv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：Q、K、V 是三份不同输入
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：有了 Attention，模型就天然懂长程依赖
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 4：attention 权重越可解释，模型就越好
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：为什么 Attention 比固定窗口或单向压缩上下文更强？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-scaled-dot-product-attention-sqrtd_k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：为什么 scaled dot-product attention 里要除以 \( \sqrt{d_k} \)？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3self-attention-cross-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：self-attention 和 cross-attention 的区别是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4gpt-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：GPT 为什么一定要用 causal mask？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5multi-head-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：multi-head attention 的价值是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-transformer-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章：Transformer 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-tokenizer-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章：Tokenizer 与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-pretraining/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 9 章：预训练 Pretraining
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-scaling-law/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 10 章：Scaling Law 与大模型为什么变大
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 11 章：LLM 评估
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 5 · 后训练与微调
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 5 · 后训练与微调
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-sft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 12 章：Supervised Fine-Tuning，SFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-lora-qlora-peft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 13 章：参数高效微调：LoRA / QLoRA / PEFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 14 章：偏好对齐：RLHF / DPO / RLAIF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 6 · LLM 应用工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 6 · LLM 应用工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-embedding-retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 15 章：Embedding、向量数据库与语义检索
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-llmops-deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 18 章：LLMOps、部署与生产化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前沿技术观察
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    前沿技术观察
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_tech/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术条目池
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    分析报告索引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/reports/deepseek-v4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek-V4 技术分析报告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/_report_template/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通用报告模板
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 核心直觉
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 核心直觉">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 没有 Attention 时会发生什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Attention 的一句话直觉
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 一个最小例子
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 数学定义
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 数学定义">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-qkv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Q、K、V 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 注意力分数怎么来
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-sqrtd_k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 为什么要除以 \( \sqrt{d_k} \)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 softmax 在做什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 从直觉到实现
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 从直觉到实现">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 第一步：输入序列先变成向量
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 第二步：算每个位置对所有位置的相关性
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-mask-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 第三步：做 mask 和 softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 第四步：按权重汇总 value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-self-attentioncross-attention-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Self-Attention、Cross-Attention 与 Causal Mask
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Self-Attention、Cross-Attention 与 Causal Mask">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-self-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Self-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-cross-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Cross-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-causal-mask-gpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Causal Mask 为什么是 GPT 的关键约束
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-multi-head-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Multi-Head Attention 为什么有用
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 最小代码实现
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：Attention 就是在“找到最重要的一个词”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2qkv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：Q、K、V 是三份不同输入
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：有了 Attention，模型就天然懂长程依赖
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 4：attention 权重越可解释，模型就越好
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：为什么 Attention 比固定窗口或单向压缩上下文更强？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-scaled-dot-product-attention-sqrtd_k" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：为什么 scaled dot-product attention 里要除以 \( \sqrt{d_k} \)？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3self-attention-cross-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：self-attention 和 cross-attention 的区别是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4gpt-causal-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：GPT 为什么一定要用 causal mask？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5multi-head-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：multi-head attention 的价值是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/edit/main/docs/book/05-attention.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="5-attention">第 5 章：Attention 机制<a class="headerlink" href="#5-attention" title="Permanent link">&para;</a></h1>
+<h2 id="1">1. 本章要解决的问题<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>第 4 章里，我们已经沿着：</p>
+<p><code>n-gram -&gt; 神经语言模型</code></p>
+<p>这条线看到了语言模型是怎样一步步变强的。</p>
+<p>但当我们继续往前走时，很快会撞上一个新的核心问题：</p>
+<p><strong>模型到底怎样“有选择地看上下文”？</strong></p>
+<p>例如一句话：</p>
+<p><code>The animal didn't cross the street because it was too tired.</code></p>
+<p>这里的 <code>it</code> 更可能指代 <code>animal</code>，而不是 <code>street</code>。</p>
+<p>人类读到这里，几乎会自然地把注意力放到真正相关的词上；
+但如果一个模型只是机械地把固定长度上下文压进一个向量里，那么：</p>
+<ul>
+<li>远距离依赖很容易丢失</li>
+<li>不同位置的信息会被混在一起</li>
+<li>模型很难动态决定“当前最该看谁”</li>
+</ul>
+<p>这就是 Attention 要解决的事。</p>
+<p>这一章的任务可以概括成一句话：</p>
+<p><strong>理解模型为什么需要一种“按相关性读取上下文”的机制，以及这种机制是怎样被写成可训练计算图的。</strong></p>
+<p>从全书结构上看，这一章有三个作用：</p>
+<ul>
+<li>它承接第 4 章“语言模型为什么需要更强上下文建模”</li>
+<li>它为第 6 章 Transformer 架构提供最关键的核心模块</li>
+<li>它为第 7 章 Mini-GPT 的代码实现打下直接基础</li>
+</ul>
+<p>如果第 4 章回答的是“模型在做什么预测任务”，那么第 5 章回答的就是：</p>
+<p><strong>模型在预测下一个 token 时，究竟怎样利用前文。</strong></p>
+<h2 id="2">2. 你学完后应该会什么<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>能用自己的话解释 Attention 为什么会出现</li>
+<li>能理解 query、key、value 分别在做什么</li>
+<li>能写出 scaled dot-product attention 的核心公式</li>
+<li>能解释为什么要除以 <span class="arithmatex">\( \sqrt{d_k} \)</span></li>
+<li>能区分 self-attention、cross-attention 和 causal self-attention</li>
+<li>能理解 multi-head attention 为什么有用</li>
+<li>能看懂 GPT 里 attention 模块的最小实现</li>
+</ul>
+<h2 id="3">3. 核心直觉<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p>先不急着上公式，我们先把它想成一个“按需查资料”的过程。</p>
+<h3 id="31-attention">3.1 没有 Attention 时会发生什么<a class="headerlink" href="#31-attention" title="Permanent link">&para;</a></h3>
+<p>假设我们要预测一句话里的下一个 token。</p>
+<p>如果模型只能把整个前文压缩成一个固定向量，那么它会遇到一个问题：</p>
+<p><strong>所有历史信息都要被提前揉成一团。</strong></p>
+<p>这会带来两个直接困难：</p>
+<ul>
+<li>重要信息和不重要信息没有显式区分</li>
+<li>当前预测真正需要哪部分上下文，模型很难动态选择</li>
+</ul>
+<p>这也是早期 RNN / seq2seq 模型里常见的瓶颈之一：
+句子越长，信息越容易在传递过程中衰减。</p>
+<h3 id="32-attention">3.2 Attention 的一句话直觉<a class="headerlink" href="#32-attention" title="Permanent link">&para;</a></h3>
+<p>Attention 可以粗暴但有效地理解成：</p>
+<p><strong>当前 token 在处理自己时，会去整个上下文里“找对自己最有帮助的信息”，再把这些信息按权重加权汇总。</strong></p>
+<p>也就是说，它不是把上下文一股脑塞进来，而是会问：</p>
+<ul>
+<li>我现在是谁？</li>
+<li>我需要什么信息？</li>
+<li>历史上哪些 token 和我最相关？</li>
+<li>这些 token 应该各占多大权重？</li>
+</ul>
+<h3 id="33">3.3 一个最小例子<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<p>看一句英文：</p>
+<p><code>The cat chased the mouse because it was hungry</code></p>
+<p>当模型处理 <code>it</code> 之后的内容时，<code>it</code> 到底和谁更相关？</p>
+<p>一个好的模型不会平均看待前面的每个词，而会更关注：</p>
+<ul>
+<li><code>cat</code></li>
+<li><code>mouse</code></li>
+<li><code>because</code></li>
+</ul>
+<p>其中究竟更偏向谁，要由当前任务和训练数据共同决定。</p>
+<p>这就是 Attention 最核心的价值：</p>
+<p><strong>让“关注哪里”成为模型可以学习的事情。</strong></p>
+<h2 id="4">4. 数学定义<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<p>现在把上面的直觉写成公式。</p>
+<h3 id="41-qkv">4.1 Q、K、V 是什么<a class="headerlink" href="#41-qkv" title="Permanent link">&para;</a></h3>
+<p>对于输入序列中的每个 token 表示向量 <code>x</code>，我们通常会通过三组线性变换得到：</p>
+<div class="arithmatex">\[
+q = xW_Q,\quad k = xW_K,\quad v = xW_V
+\]</div>
+<p>把整段序列写成矩阵形式：</p>
+<div class="arithmatex">\[
+Q = XW_Q,\quad K = XW_K,\quad V = XW_V
+\]</div>
+<p>这里可以先用直觉理解：</p>
+<ul>
+<li><code>Query</code>：我现在想找什么信息</li>
+<li><code>Key</code>：我身上有什么信息可供匹配</li>
+<li><code>Value</code>：如果你觉得我相关，你最终拿走的内容是什么</li>
+</ul>
+<p>最容易混淆的是：</p>
+<p><strong>真正被加权求和的是 <code>V</code>，不是 <code>K</code>。</strong></p>
+<p><code>Q</code> 和 <code>K</code> 主要负责算“相关性分数”，<code>V</code> 才是最终被读取的内容。</p>
+<h3 id="42">4.2 注意力分数怎么来<a class="headerlink" href="#42" title="Permanent link">&para;</a></h3>
+<p>对于当前位置的 query <span class="arithmatex">\( q_i \)</span> 和所有位置的 key <span class="arithmatex">\( k_j \)</span>，先计算相似度：</p>
+<div class="arithmatex">\[
+s_{ij} = q_i k_j^T
+\]</div>
+<p>把所有位置一起写成矩阵：</p>
+<div class="arithmatex">\[
+S = QK^T
+\]</div>
+<p>它表示：</p>
+<p><strong>序列中每个位置，对其他所有位置的关注分数。</strong></p>
+<h3 id="43-sqrtd_k">4.3 为什么要除以 <span class="arithmatex">\( \sqrt{d_k} \)</span><a class="headerlink" href="#43-sqrtd_k" title="Permanent link">&para;</a></h3>
+<p>如果 key 的维度是 <span class="arithmatex">\( d_k \)</span>，那么标准写法是：</p>
+<div class="arithmatex">\[
+\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\]</div>
+<p>为什么要缩放？</p>
+<p>因为当维度变大时，点积的数值通常也会变大，softmax 会更容易进入非常尖锐的区域，导致：</p>
+<ul>
+<li>某几个位置的概率几乎变成 1</li>
+<li>其他位置几乎变成 0</li>
+<li>梯度不稳定，训练更难</li>
+</ul>
+<p>所以除以 <span class="arithmatex">\( \sqrt{d_k} \)</span> 的作用可以简单理解成：</p>
+<p><strong>把分数的尺度控制在更稳定的范围里。</strong></p>
+<h3 id="44-softmax">4.4 softmax 在做什么<a class="headerlink" href="#44-softmax" title="Permanent link">&para;</a></h3>
+<p>对每一行分数做 softmax 后，我们得到注意力权重：</p>
+<div class="arithmatex">\[
+A = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)
+\]</div>
+<p>这里的 <span class="arithmatex">\( A_{ij} \)</span> 可以理解为：</p>
+<p><strong>当第 <code>i</code> 个位置更新自己时，它应该从第 <code>j</code> 个位置拿多少信息。</strong></p>
+<p>最后输出是：</p>
+<div class="arithmatex">\[
+O = AV
+\]</div>
+<p>这表示每个位置都从整段上下文中，取回一个加权汇总后的新表示。</p>
+<h2 id="5">5. 从直觉到实现<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>这一节不再堆公式，而是按计算流程走一遍。</p>
+<h3 id="51">5.1 第一步：输入序列先变成向量<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<p>设输入序列长度为 <span class="arithmatex">\( T \)</span>，每个 token 的隐藏维度是 <span class="arithmatex">\( d_{model} \)</span>。</p>
+<p>那么输入张量形状通常是：</p>
+<div class="arithmatex">\[
+X \in \mathbb{R}^{T \times d_{model}}
+\]</div>
+<p>经过三组线性层后得到：</p>
+<ul>
+<li><span class="arithmatex">\( Q \)</span>：<span class="arithmatex">\( T \times d_k \)</span></li>
+<li><span class="arithmatex">\( K \)</span>：<span class="arithmatex">\( T \times d_k \)</span></li>
+<li><span class="arithmatex">\( V \)</span>：<span class="arithmatex">\( T \times d_v \)</span></li>
+</ul>
+<h3 id="52">5.2 第二步：算每个位置对所有位置的相关性<a class="headerlink" href="#52" title="Permanent link">&para;</a></h3>
+<p>做一次矩阵乘法：</p>
+<div class="arithmatex">\[
+QK^T
+\]</div>
+<p>结果形状是：</p>
+<div class="arithmatex">\[
+T \times T
+\]</div>
+<p>这个矩阵非常关键，因为它直接刻画了：</p>
+<p><strong>每个 token 会看向哪些 token。</strong></p>
+<h3 id="53-mask-softmax">5.3 第三步：做 mask 和 softmax<a class="headerlink" href="#53-mask-softmax" title="Permanent link">&para;</a></h3>
+<p>如果是普通 self-attention，一个位置可以看整段序列。</p>
+<p>但如果是 GPT 这样的自回归语言模型，就必须满足：</p>
+<p><strong>当前位置不能偷看未来 token。</strong></p>
+<p>所以在 softmax 之前，要对未来位置加上 mask。</p>
+<p>直观上可以理解为：</p>
+<ul>
+<li>允许看的位置保留原分数</li>
+<li>不允许看的位置改成一个极小值，例如 <code>-inf</code></li>
+</ul>
+<p>这样 softmax 之后，那些位置的权重就会接近 0。</p>
+<h3 id="54-value">5.4 第四步：按权重汇总 value<a class="headerlink" href="#54-value" title="Permanent link">&para;</a></h3>
+<p>注意力权重矩阵和 <code>V</code> 相乘后，每个位置都会得到一个新的表示：</p>
+<div class="arithmatex">\[
+O = AV
+\]</div>
+<p>这个新表示不是来自某一个单独 token，而是来自：</p>
+<p><strong>整段上下文中对当前任务最有帮助的信息加权组合。</strong></p>
+<p>这正是 Attention 和“固定窗口拼接特征”之间最本质的区别。</p>
+<h2 id="6-self-attentioncross-attention-causal-mask">6. Self-Attention、Cross-Attention 与 Causal Mask<a class="headerlink" href="#6-self-attentioncross-attention-causal-mask" title="Permanent link">&para;</a></h2>
+<h3 id="61-self-attention">6.1 Self-Attention<a class="headerlink" href="#61-self-attention" title="Permanent link">&para;</a></h3>
+<p>Self-Attention 指的是：</p>
+<p><strong>Q、K、V 都来自同一个序列。</strong></p>
+<p>也就是说，一个序列内部的每个位置，都可以和同一序列的其他位置交互。</p>
+<p>在 Transformer 里，这是一种最基础也最重要的信息混合方式。</p>
+<h3 id="62-cross-attention">6.2 Cross-Attention<a class="headerlink" href="#62-cross-attention" title="Permanent link">&para;</a></h3>
+<p>Cross-Attention 指的是：</p>
+<ul>
+<li><code>Q</code> 来自一个序列</li>
+<li><code>K</code> 和 <code>V</code> 来自另一个序列</li>
+</ul>
+<p>例如机器翻译里，decoder 在生成目标语言时，可以把当前生成状态作为 query，再去读 encoder 输出的表示。</p>
+<p>所以 cross-attention 的核心不是“更高级”，而是：</p>
+<p><strong>让一个序列主动去读取另一个序列。</strong></p>
+<h3 id="63-causal-mask-gpt">6.3 Causal Mask 为什么是 GPT 的关键约束<a class="headerlink" href="#63-causal-mask-gpt" title="Permanent link">&para;</a></h3>
+<p>GPT 做的是 next-token prediction。</p>
+<p>如果在训练时，第 <code>t</code> 个位置可以直接看到第 <code>t+1</code> 个甚至更后面的 token，那么这个任务就被“作弊”了。</p>
+<p>因此 decoder-only GPT 必须使用 causal mask，也叫：</p>
+<ul>
+<li>look-ahead mask</li>
+<li>upper-triangular mask</li>
+</ul>
+<p>它保证：</p>
+<p><strong>第 <code>t</code> 个位置只能看见 <code>1...t</code> 的内容，而不能看见未来。</strong></p>
+<p>这也是为什么 BERT 和 GPT 在 attention 约束上会不同：</p>
+<ul>
+<li>BERT 做双向理解，通常不需要 causal mask</li>
+<li>GPT 做自回归生成，必须使用 causal mask</li>
+</ul>
+<h2 id="7-multi-head-attention">7. Multi-Head Attention 为什么有用<a class="headerlink" href="#7-multi-head-attention" title="Permanent link">&para;</a></h2>
+<p>如果只有一个 attention head，会发生什么？</p>
+<p>模型仍然可以学到相关性，但它每次只能在一种投影空间里做“匹配”和“读取”。</p>
+<p>Multi-Head Attention 的做法是：</p>
+<ul>
+<li>把隐藏维度切成多个头</li>
+<li>每个头各自学习一套 <span class="arithmatex">\( W_Q, W_K, W_V \)</span></li>
+<li>每个头独立做 attention</li>
+<li>最后把多个头拼接起来，再做一次线性变换</li>
+</ul>
+<p>它的直觉价值在于：</p>
+<p><strong>不同头可以学习不同类型的关系。</strong></p>
+<p>例如某些头更关注：</p>
+<ul>
+<li>近距离词法依赖</li>
+<li>长距离指代关系</li>
+<li>句法结构</li>
+<li>分隔符或位置边界</li>
+</ul>
+<p>当然，现实里“每个头都有明确语义”并不总是成立，但从建模能力上说，多头确实给了模型更丰富的表达空间。</p>
+<h2 id="8">8. 最小代码实现<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<p>下面给一个最小可读版本的 scaled dot-product attention。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">scaled_dot_product_attention</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="sd">    q, k, v: [batch, heads, seq_len, head_dim]</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="sd">    mask:    [1, 1, seq_len, seq_len] or broadcastable tensor</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">d_k</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">scores</span> <span class="o">=</span> <span class="n">q</span> <span class="o">@</span> <span class="n">k</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">d_k</span><span class="p">)</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">masked_fill</span><span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">))</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="n">attn</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="n">out</span> <span class="o">=</span> <span class="n">attn</span> <span class="o">@</span> <span class="n">v</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">attn</span>
+</span></code></pre></div>
+<p>如果我们要构造 GPT 风格的 causal mask，可以这样写：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_causal_mask</span><span class="p">(</span><span class="n">seq_len</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">seq_len</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">))</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="k">return</span> <span class="n">mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></code></pre></div>
+<p>这个 mask 的作用是保留下三角区域，也就是：</p>
+<p>当前位置只能看自己和自己之前的位置。</p>
+<p>如果你把这两段代码和第 7 章的 Mini-GPT 实现放在一起看，会发现 GPT 的 attention 核心其实并不神秘：</p>
+<p><strong>线性投影 -&gt; 打分 -&gt; mask -&gt; softmax -&gt; 加权求和</strong></p>
+<p>难点不在公式本身，而在于你是否真正理解每一步在限制什么、读取什么。</p>
+<h2 id="9">9. 常见误区<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<h3 id="1attention">误区 1：Attention 就是在“找到最重要的一个词”<a class="headerlink" href="#1attention" title="Permanent link">&para;</a></h3>
+<p>不准确。</p>
+<p>Attention 通常不是硬选择某一个词，而是对多个位置做加权汇总。
+虽然有时权重会很尖锐，但本质上它是软选择，不是离散检索。</p>
+<h3 id="2qkv">误区 2：Q、K、V 是三份不同输入<a class="headerlink" href="#2qkv" title="Permanent link">&para;</a></h3>
+<p>不一定。</p>
+<p>在 self-attention 中，它们通常都来自同一个输入序列，只是经过了不同的线性变换；
+只有在 cross-attention 时，它们才可能来自不同来源。</p>
+<h3 id="3-attention">误区 3：有了 Attention，模型就天然懂长程依赖<a class="headerlink" href="#3-attention" title="Permanent link">&para;</a></h3>
+<p>也不能这么说。</p>
+<p>Attention 确实给了模型直接访问远距离 token 的路径，但模型最终能否学会有效利用这些路径，还取决于：</p>
+<ul>
+<li>数据</li>
+<li>训练目标</li>
+<li>模型规模</li>
+<li>优化稳定性</li>
+</ul>
+<h3 id="4attention">误区 4：attention 权重越可解释，模型就越好<a class="headerlink" href="#4attention" title="Permanent link">&para;</a></h3>
+<p>这是一个常见但危险的过度推断。</p>
+<p>attention map 有时能提供一定直觉，但“权重高”不一定等于“因果上最重要”。
+把 attention 完全当成解释工具，通常会过度简化模型内部行为。</p>
+<h2 id="10">10. 面试问题<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<h3 id="q1-attention">Q1：为什么 Attention 比固定窗口或单向压缩上下文更强？<a class="headerlink" href="#q1-attention" title="Permanent link">&para;</a></h3>
+<p>因为它允许每个位置在计算自己表示时，动态访问整段上下文，而不是把所有历史信息提前压缩成一个固定向量。这样模型更容易捕捉长距离依赖，也能更灵活地区分哪些上下文更重要。</p>
+<h3 id="q2-scaled-dot-product-attention-sqrtd_k">Q2：为什么 scaled dot-product attention 里要除以 <span class="arithmatex">\( \sqrt{d_k} \)</span>？<a class="headerlink" href="#q2-scaled-dot-product-attention-sqrtd_k" title="Permanent link">&para;</a></h3>
+<p>因为点积的方差会随着维度增大而变大，直接送进 softmax 会让分布过于尖锐，导致梯度不稳定。除以 <span class="arithmatex">\( \sqrt{d_k} \)</span> 可以让数值尺度更平稳。</p>
+<h3 id="q3self-attention-cross-attention">Q3：self-attention 和 cross-attention 的区别是什么？<a class="headerlink" href="#q3self-attention-cross-attention" title="Permanent link">&para;</a></h3>
+<p>self-attention 中，Q、K、V 来自同一个序列；cross-attention 中，Q 来自当前序列，而 K、V 来自另一个序列。前者强调序列内部交互，后者强调一个序列去读取另一个序列。</p>
+<h3 id="q4gpt-causal-mask">Q4：GPT 为什么一定要用 causal mask？<a class="headerlink" href="#q4gpt-causal-mask" title="Permanent link">&para;</a></h3>
+<p>因为 GPT 的训练目标是根据前文预测下一个 token。如果当前位置能看到未来 token，训练目标就被破坏了，模型会通过“偷看答案”得到虚假的低 loss。</p>
+<h3 id="q5multi-head-attention">Q5：multi-head attention 的价值是什么？<a class="headerlink" href="#q5multi-head-attention" title="Permanent link">&para;</a></h3>
+<p>它让模型可以在多个不同子空间里并行学习关系模式，而不是只用一套相似度规则处理所有依赖。这样表达能力通常更强。</p>
+<h2 id="11">11. 本章小结<a class="headerlink" href="#11" title="Permanent link">&para;</a></h2>
+<p>这一章真正要建立的，不只是一个公式，而是一条清晰主线：</p>
+<p><code>为什么需要动态读取上下文 -&gt; Q/K/V 如何把这个过程参数化 -&gt; self-attention 如何在序列内部做信息交互 -&gt; causal mask 如何约束生成任务 -&gt; multi-head 如何提升表达能力</code></p>
+<p>如果你读到这里，已经能回答下面这个问题：</p>
+<p><strong>语言模型在预测下一个 token 时，并不是“平均看前文”，而是在用 attention 有选择地读取前文。</strong></p>
+<p>这就是 Transformer 能成立的关键前提。</p>
+<p>下一章我们会在这个基础上继续往上走：</p>
+<p><strong>把 attention、位置编码、FFN、残差连接、LayerNorm 拼成一个完整的 Transformer block。</strong></p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Ferris-Liu" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "navigation.instant", "navigation.instant.progress", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

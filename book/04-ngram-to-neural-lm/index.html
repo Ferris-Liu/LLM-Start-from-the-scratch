@@ -1,0 +1,3569 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="一个AI炼丹师的大模型学习笔记，从 Transformer、预训练、微调到 RAG、Agent 与部署实践。">
+      
+      
+        <meta name="author" content="FerrisLIU">
+      
+      
+        <link rel="canonical" href="https://ferris-liu.github.io/LLM-Start-from-the-scratch/book/04-ngram-to-neural-lm/">
+      
+      
+        <link rel="prev" href="../03-nlp-text-representation/">
+      
+      
+        <link rel="next" href="../05-attention/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第 4 章：从 n-gram 到神经语言模型 - 机器于此理解语言</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#4-n-gram" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="机器于此理解语言" class="md-header__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器于此理解语言
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第 4 章：从 n-gram 到神经语言模型
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到浅色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换到浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换到深色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="机器于此理解语言" class="md-nav__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器于此理解语言
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about-author/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    作者介绍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前言
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何阅读这本书
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书提纲与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    从这里开始
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    从这里开始
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书导航
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    全书导航
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-role-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 0 章：大模型岗位地图与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 1 · 基础补齐
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 1 · 基础补齐
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pytorch-training-loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 2 章：PyTorch 与训练循环
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-nlp-text-representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 3 章：NLP 基础与文本表示
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章：从 n-gram 到神经语言模型
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章：从 n-gram 到神经语言模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 什么是语言模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 什么是语言模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-next-token-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 next-token prediction 的直觉
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 它不仅是在补下一个词，也是在给整个句子建模
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-chain-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Chain Rule：为什么可以一步一步预测
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Chain Rule：为什么可以一步一步预测">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 一个最小例子
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. n-gram：最早期的语言模型怎么做
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. n-gram：最早期的语言模型怎么做">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-unigram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 unigram：完全不看上下文
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-bigram-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 bigram：只看前一个 token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-trigram-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 trigram：看前两个 token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 一般化到 n-gram
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-bigram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 一个最小 bigram 例子
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. n-gram 为什么不够
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. n-gram 为什么不够">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 数据稀疏：没见过就很难办
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 上下文窗口太短
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 泛化能力差
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-smoothing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 smoothing 能缓解，但不能根治
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 从 n-gram 到神经语言模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 从 n-gram 到神经语言模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 分布式表示：词不再只是孤立编号
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 参数共享：没见过的组合也能有机会猜对
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 最小神经语言模型长什么样
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-mlp-rnn-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 从 MLP 到 RNN，再到 Transformer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 从 MLP 到 RNN，再到 Transformer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-mlp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 MLP 语言模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-rnn-lstm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 RNN / LSTM 语言模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Transformer 语言模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-perplexity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. perplexity：语言模型好不好，怎么衡量
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 从直觉到实现：语言模型训练时到底在干什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-bigram-language-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. 最小代码实现：bigram language model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：语言模型就是在背答案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2next-token-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：next-token prediction 太简单，所以学不到复杂能力
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3n-gram-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：n-gram 和 Transformer 是完全无关的两件事
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：语言模型本质上在做什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-next-token-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：为什么 next-token prediction 可以用于训练整个语言模型？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：n-gram 的核心问题是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：神经语言模型相比 n-gram 的主要提升是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：为什么后来语言模型会走向 Transformer？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 3 · Transformer 核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 3 · Transformer 核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-transformer-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章：Transformer 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-tokenizer-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章：Tokenizer 与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-pretraining/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 9 章：预训练 Pretraining
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-scaling-law/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 10 章：Scaling Law 与大模型为什么变大
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 11 章：LLM 评估
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 5 · 后训练与微调
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 5 · 后训练与微调
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-sft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 12 章：Supervised Fine-Tuning，SFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-lora-qlora-peft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 13 章：参数高效微调：LoRA / QLoRA / PEFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 14 章：偏好对齐：RLHF / DPO / RLAIF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 6 · LLM 应用工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 6 · LLM 应用工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-embedding-retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 15 章：Embedding、向量数据库与语义检索
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-llmops-deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 18 章：LLMOps、部署与生产化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前沿技术观察
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    前沿技术观察
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_tech/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术条目池
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    分析报告索引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/reports/deepseek-v4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek-V4 技术分析报告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/_report_template/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通用报告模板
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 什么是语言模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 什么是语言模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-next-token-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 next-token prediction 的直觉
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 它不仅是在补下一个词，也是在给整个句子建模
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-chain-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Chain Rule：为什么可以一步一步预测
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Chain Rule：为什么可以一步一步预测">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 一个最小例子
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. n-gram：最早期的语言模型怎么做
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. n-gram：最早期的语言模型怎么做">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-unigram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 unigram：完全不看上下文
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-bigram-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 bigram：只看前一个 token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-trigram-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 trigram：看前两个 token
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 一般化到 n-gram
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-bigram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 一个最小 bigram 例子
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. n-gram 为什么不够
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. n-gram 为什么不够">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 数据稀疏：没见过就很难办
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 上下文窗口太短
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 泛化能力差
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-smoothing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 smoothing 能缓解，但不能根治
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 从 n-gram 到神经语言模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 从 n-gram 到神经语言模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 分布式表示：词不再只是孤立编号
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 参数共享：没见过的组合也能有机会猜对
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 最小神经语言模型长什么样
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-mlp-rnn-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 从 MLP 到 RNN，再到 Transformer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 从 MLP 到 RNN，再到 Transformer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-mlp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 MLP 语言模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-rnn-lstm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 RNN / LSTM 语言模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Transformer 语言模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-perplexity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. perplexity：语言模型好不好，怎么衡量
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 从直觉到实现：语言模型训练时到底在干什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-bigram-language-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. 最小代码实现：bigram language model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：语言模型就是在背答案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2next-token-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：next-token prediction 太简单，所以学不到复杂能力
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3n-gram-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：n-gram 和 Transformer 是完全无关的两件事
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：语言模型本质上在做什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-next-token-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：为什么 next-token prediction 可以用于训练整个语言模型？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：n-gram 的核心问题是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-n-gram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：神经语言模型相比 n-gram 的主要提升是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：为什么后来语言模型会走向 Transformer？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/edit/main/docs/book/04-ngram-to-neural-lm.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="4-n-gram">第 4 章：从 n-gram 到神经语言模型<a class="headerlink" href="#4-n-gram" title="Permanent link">&para;</a></h1>
+<h2 id="1">1. 本章要解决的问题<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>第 3 章里，我们已经回答了一个基础但非常重要的问题：</p>
+<p>文本是怎么变成模型可以处理的输入的？</p>
+<p>我们已经知道，一句话进入模型之前，通常会经历：</p>
+<p><code>文本 -&gt; token -&gt; token id -&gt; embedding</code></p>
+<p>但这时新的问题马上就来了：</p>
+<p>输入已经变成向量了，然后呢？</p>
+<p>模型到底想学会什么？</p>
+<p>更具体一点说，当我们把一句话喂给模型时，模型训练的目标究竟是什么？</p>
+<p>例如给它前文：</p>
+<p><code>I love</code></p>
+<p>模型为什么会倾向于预测：</p>
+<ul>
+<li><code>you</code></li>
+<li><code>deep</code></li>
+<li><code>this</code></li>
+</ul>
+<p>而不是一个完全随机的 token？</p>
+<p>这就是本章要解决的核心问题。</p>
+<p>这一章的任务可以概括成一句话：</p>
+<p>我们要建立“语言模型”这件事的最小完整直觉。</p>
+<p>这里的“最小完整”很重要。</p>
+<p>因为很多人在一开始接触大模型时，会直接把注意力放在：</p>
+<ul>
+<li>Transformer</li>
+<li>Attention</li>
+<li>GPT</li>
+<li>预训练</li>
+</ul>
+<p>这些现代概念上。</p>
+<p>但如果你没有先搞清楚“语言模型本质上到底在预测什么”，后面看到再复杂的结构，都容易只停留在“会背名词”的状态。</p>
+<p>所以这一章不急着讲复杂结构，而是先把一条最核心的主线讲明白：</p>
+<p><code>语言模型是什么 -&gt; n-gram 是怎么做的 -&gt; 它为什么不够 -&gt; 神经语言模型为什么出现 -&gt; 为什么后来会走到 Transformer</code></p>
+<p>从全书结构上看，这一章有三个作用：</p>
+<ul>
+<li>它承接第 3 章的“输入表示”</li>
+<li>它为第 5 章的 Attention 建立问题背景</li>
+<li>它也为第 6 章 Transformer 和第 7 章 Mini-GPT 做目标层面的铺垫</li>
+</ul>
+<p>如果第 3 章解决的是“文本怎么表示”，那么第 4 章解决的就是：</p>
+<p>模型拿到这些表示之后，到底在学习什么预测任务。</p>
+<h2 id="2">2. 你学完后应该会什么<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>能用自己的话解释什么是语言模型</li>
+<li>能理解 next-token prediction 和序列概率建模之间的关系</li>
+<li>能写出 Chain Rule，并知道它为什么重要</li>
+<li>能理解 unigram、bigram、trigram 的基本思想</li>
+<li>能说明 n-gram 语言模型为什么会遇到数据稀疏和泛化差的问题</li>
+<li>能理解神经语言模型相对 n-gram 的核心改进</li>
+<li>能顺着这条历史脉络，过渡到后面的 Attention 和 Transformer</li>
+</ul>
+<h2 id="3">3. 什么是语言模型<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p>先给一个尽量不绕的定义：</p>
+<p>语言模型（Language Model, LM）做的事情是：</p>
+<p><strong>给定前文，预测下一个 token 出现的概率。</strong></p>
+<p>例如前文是：</p>
+<p><code>I love</code></p>
+<p>一个语言模型可能给出这样的预测：</p>
+<ul>
+<li><code>you</code>: 0.35</li>
+<li><code>deep</code>: 0.18</li>
+<li><code>this</code>: 0.12</li>
+<li><code>pizza</code>: 0.05</li>
+</ul>
+<p>这意味着什么？</p>
+<p>意味着在模型看来，在当前上下文下，某些 token 比另一些 token 更合理、更可能出现。</p>
+<p>所以语言模型不是在做“绝对正确答案”的判断，而是在做：</p>
+<p><strong>条件概率分布的估计。</strong></p>
+<h3 id="31-next-token-prediction">3.1 next-token prediction 的直觉<a class="headerlink" href="#31-next-token-prediction" title="Permanent link">&para;</a></h3>
+<p>如果把语言模型想得非常朴素一点，它其实像是一个“自动补全系统”。</p>
+<p>你给它一句话的前半段，它根据过去看过的大量文本，判断后面最可能接什么。</p>
+<p>例如：</p>
+<ul>
+<li><code>My name is</code></li>
+<li><code>Today is a</code></li>
+<li><code>The capital of France is</code></li>
+</ul>
+<p>在不同上下文里，模型对“下一个 token”的判断会完全不同。</p>
+<p>所以语言模型最核心的能力，不是记住固定答案，而是：</p>
+<p><strong>根据上下文动态调整对下一个 token 的概率判断。</strong></p>
+<h3 id="32">3.2 它不仅是在补下一个词，也是在给整个句子建模<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<p>虽然训练时我们常说“预测下一个 token”，但这件事背后对应的是更一般的问题：</p>
+<p><strong>给整个 token 序列分配一个概率。</strong></p>
+<p>例如一个句子：</p>
+<p><code>I love deep learning</code></p>
+<p>如果一个模型觉得这个句子在语言上更自然、更常见，那么它就应该给这个序列更高的概率；
+如果一个句子非常奇怪、几乎不符合语言习惯，那么它就应该给更低的概率。</p>
+<p>所以：</p>
+<ul>
+<li>从训练过程看，它是在一步一步预测下一个 token</li>
+<li>从概率建模看，它是在为整个序列建模</li>
+</ul>
+<p>这两件事，本质上是同一件事的两个视角。</p>
+<h2 id="4-chain-rule">4. Chain Rule：为什么可以一步一步预测<a class="headerlink" href="#4-chain-rule" title="Permanent link">&para;</a></h2>
+<p>现在我们来把上面的直觉写成数学形式。</p>
+<p>设一个 token 序列是：</p>
+<div class="arithmatex">\[
+x_1, x_2, x_3, \dots, x_T
+\]</div>
+<p>那么这个完整序列的概率可以写成：</p>
+<div class="arithmatex">\[
+P(x_1, x_2, \dots, x_T)
+= P(x_1) P(x_2|x_1) P(x_3|x_1,x_2) \dots P(x_T|x_1,\dots,x_{T-1})
+\]</div>
+<p>这就是概率论里的 Chain Rule。</p>
+<p>它的意义非常大，因为它告诉我们：</p>
+<p>如果你能不断回答“给定前文，下一个 token 的概率是多少”，那么你其实就已经可以给整个句子建模了。</p>
+<p>换句话说，语言模型之所以可以训练成“next-token prediction”，并不是拍脑袋定出来的技巧，而是因为：</p>
+<p><strong>序列概率本来就可以分解成一连串条件概率。</strong></p>
+<h3 id="41">4.1 一个最小例子<a class="headerlink" href="#41" title="Permanent link">&para;</a></h3>
+<p>假设一句话是：</p>
+<p><code>I love NLP</code></p>
+<p>那么它的概率可以拆成：</p>
+<div class="arithmatex">\[
+P(\text{I love NLP}) = P(\text{I}) \cdot P(\text{love}|\text{I}) \cdot P(\text{NLP}|\text{I love})
+\]</div>
+<p>这说明模型训练时其实在做三件事：</p>
+<ol>
+<li>句子开头出现 <code>I</code> 的概率有多大</li>
+<li>已知前面是 <code>I</code>，下一个是 <code>love</code> 的概率有多大</li>
+<li>已知前面是 <code>I love</code>，下一个是 <code>NLP</code> 的概率有多大</li>
+</ol>
+<p>于是，一个看起来复杂的句子概率问题，就被拆成了一连串局部预测问题。</p>
+<p>这就是现代语言模型训练目标的基础直觉。</p>
+<h2 id="5-n-gram">5. n-gram：最早期的语言模型怎么做<a class="headerlink" href="#5-n-gram" title="Permanent link">&para;</a></h2>
+<p>既然语言模型的目标是估计：</p>
+<div class="arithmatex">\[
+P(x_t | x_1, x_2, \dots, x_{t-1})
+\]</div>
+<p>那最直接的方法是什么？</p>
+<p>最直接的方法当然是：</p>
+<p>去统计训练语料里各种上下文和下一个词的共现次数。</p>
+<p>这就是传统 n-gram 语言模型的基本思路。</p>
+<h3 id="51-unigram">5.1 unigram：完全不看上下文<a class="headerlink" href="#51-unigram" title="Permanent link">&para;</a></h3>
+<p>最简单的语言模型叫 unigram model。</p>
+<p>它做了一个非常强的简化：</p>
+<p>每个 token 的出现概率只看它自己，不看上下文。</p>
+<p>也就是说：</p>
+<div class="arithmatex">\[
+P(x_t | x_1, \dots, x_{t-1}) \approx P(x_t)
+\]</div>
+<p>这当然很粗糙，但它给了我们最早的概率语言模型直觉：</p>
+<p>一个词出现得越频繁，它的概率就越大。</p>
+<p>例如在一个小语料里：</p>
+<ul>
+<li><code>the</code> 出现 100 次</li>
+<li><code>cat</code> 出现 10 次</li>
+<li><code>banana</code> 出现 2 次</li>
+</ul>
+<p>那么 unigram model 就会认为 <code>the</code> 比 <code>cat</code> 更可能出现。</p>
+<p>问题是，它完全不知道上下文。</p>
+<p>所以在 unigram 看来：</p>
+<ul>
+<li><code>I eat</code> 后面接 <code>apple</code></li>
+<li><code>I eat</code> 后面接 <code>Monday</code></li>
+</ul>
+<p>可能都只是看各自的全局词频，而不是看局部语义是否合理。</p>
+<h3 id="52-bigram-token">5.2 bigram：只看前一个 token<a class="headerlink" href="#52-bigram-token" title="Permanent link">&para;</a></h3>
+<p>bigram model 往前走了一步。</p>
+<p>它假设下一个 token 只依赖前一个 token：</p>
+<div class="arithmatex">\[
+P(x_t | x_1, \dots, x_{t-1}) \approx P(x_t | x_{t-1})
+\]</div>
+<p>例如如果我们想预测：</p>
+<p><code>I am ___</code></p>
+<p>bigram model 在真正做的事情其实是：</p>
+<p>只看 <code>am</code> 后面在训练语料里通常跟什么。</p>
+<p>如果训练集中：</p>
+<ul>
+<li><code>am happy</code> 出现 40 次</li>
+<li><code>am tired</code> 出现 25 次</li>
+<li><code>am banana</code> 出现 0 次</li>
+</ul>
+<p>那么模型自然会倾向于给 <code>happy</code>、<code>tired</code> 更高概率。</p>
+<h3 id="53-trigram-token">5.3 trigram：看前两个 token<a class="headerlink" href="#53-trigram-token" title="Permanent link">&para;</a></h3>
+<p>再进一步，trigram model 假设下一个 token 只依赖前两个 token：</p>
+<div class="arithmatex">\[
+P(x_t | x_1, \dots, x_{t-1}) \approx P(x_t | x_{t-2}, x_{t-1})
+\]</div>
+<p>这比 bigram 更合理，因为语言通常不只依赖前一个词。</p>
+<p>例如：</p>
+<p><code>New York ___</code></p>
+<p>如果只看前一个 token <code>York</code>，信息不够完整；
+但如果看前两个 token <code>New York</code>，下一个词是 <code>City</code> 的概率就会更明显。</p>
+<h3 id="54-n-gram">5.4 一般化到 n-gram<a class="headerlink" href="#54-n-gram" title="Permanent link">&para;</a></h3>
+<p>所谓 n-gram，本质上就是做一个统一的马尔可夫近似：</p>
+<div class="arithmatex">\[
+P(x_t | x_1, \dots, x_{t-1}) \approx P(x_t | x_{t-n+1}, \dots, x_{t-1})
+\]</div>
+<p>也就是：</p>
+<p>预测下一个 token 时，不看全部历史，只看最近的 <code>n-1</code> 个 token。</p>
+<p>于是：</p>
+<ul>
+<li>unigram：看 0 个历史 token</li>
+<li>bigram：看 1 个历史 token</li>
+<li>trigram：看 2 个历史 token</li>
+</ul>
+<p>这就是 n-gram 语言模型名字的来源。</p>
+<h2 id="6-bigram">6. 一个最小 bigram 例子<a class="headerlink" href="#6-bigram" title="Permanent link">&para;</a></h2>
+<p>为了让这个概念彻底落地，我们来看一个最小语料：</p>
+<ul>
+<li><code>I love NLP</code></li>
+<li><code>I love deep learning</code></li>
+<li><code>I enjoy learning</code></li>
+</ul>
+<p>如果我们只做 bigram 统计，那么模型会关心：</p>
+<ul>
+<li><code>I</code> 后面出现过什么</li>
+<li><code>love</code> 后面出现过什么</li>
+<li><code>deep</code> 后面出现过什么</li>
+</ul>
+<p>例如：</p>
+<p><code>I</code> 后面的统计可能是：</p>
+<ul>
+<li><code>love</code>: 2 次</li>
+<li><code>enjoy</code>: 1 次</li>
+</ul>
+<p>所以：</p>
+<div class="arithmatex">\[
+P(\text{love}|\text{I}) = \frac{2}{3}
+\]</div>
+<div class="arithmatex">\[
+P(\text{enjoy}|\text{I}) = \frac{1}{3}
+\]</div>
+<p>再看 <code>love</code> 后面：</p>
+<ul>
+<li><code>NLP</code>: 1 次</li>
+<li><code>deep</code>: 1 次</li>
+</ul>
+<p>于是：</p>
+<div class="arithmatex">\[
+P(\text{NLP}|\text{love}) = \frac{1}{2}
+\]</div>
+<div class="arithmatex">\[
+P(\text{deep}|\text{love}) = \frac{1}{2}
+\]</div>
+<p>如果现在前文是：</p>
+<p><code>I</code></p>
+<p>那么 bigram 模型会倾向于预测：</p>
+<ul>
+<li><code>love</code></li>
+<li><code>enjoy</code></li>
+</ul>
+<p>如果前文是：</p>
+<p><code>love</code></p>
+<p>那么它会倾向于预测：</p>
+<ul>
+<li><code>NLP</code></li>
+<li><code>deep</code></li>
+</ul>
+<p>这就是最原始的“根据历史预测下一个 token”。</p>
+<p>从这里你也能看出来，n-gram 语言模型本质上很像一张巨大的条件概率统计表。</p>
+<h2 id="7-n-gram">7. n-gram 为什么不够<a class="headerlink" href="#7-n-gram" title="Permanent link">&para;</a></h2>
+<p>n-gram 很重要，因为它第一次让“语言模型”这件事变得具体可算。</p>
+<p>但它也有非常明显的问题。</p>
+<h3 id="71">7.1 数据稀疏：没见过就很难办<a class="headerlink" href="#71" title="Permanent link">&para;</a></h3>
+<p>自然语言组合非常多。</p>
+<p>即使语料已经不小，很多上下文组合仍然可能根本没有出现过。</p>
+<p>例如训练集中也许出现过：</p>
+<ul>
+<li><code>I love apples</code></li>
+<li><code>I love bananas</code></li>
+</ul>
+<p>但没出现过：</p>
+<ul>
+<li><code>I love mangoes</code></li>
+</ul>
+<p>如果你用传统 n-gram 统计，很多没见过的组合就会直接拿不到可靠概率，甚至变成 0。</p>
+<p>这就是数据稀疏问题。</p>
+<p>它不是小毛病，而是语言建模里非常本质的问题：</p>
+<p>语言是开放组合的，但纯统计表只能覆盖见过的组合。</p>
+<h3 id="72">7.2 上下文窗口太短<a class="headerlink" href="#72" title="Permanent link">&para;</a></h3>
+<p>n-gram 的第二个问题是，它只能看固定长度的历史。</p>
+<p>例如 trigram 最多只看前两个 token。</p>
+<p>这意味着很多更长距离的信息都会丢失。</p>
+<p>比如下面这个句子：</p>
+<p><code>The students who studied hard for the exam were happy because they finally passed.</code></p>
+<p>如果只看很短的局部窗口，模型可能无法稳定利用前面更远的位置来判断后面的词。</p>
+<p>而真实语言中，长距离依赖非常常见。</p>
+<h3 id="73">7.3 泛化能力差<a class="headerlink" href="#73" title="Permanent link">&para;</a></h3>
+<p>n-gram 的第三个问题更关键：</p>
+<p>它不会“举一反三”。</p>
+<p>例如：</p>
+<ul>
+<li><code>I like apples</code></li>
+<li><code>I like bananas</code></li>
+</ul>
+<p>这两个上下文在人类看来非常像。</p>
+<p>但在 n-gram 的统计表里，它们本质上只是两条独立记录。</p>
+<p>模型很难自动学会：</p>
+<ul>
+<li><code>apples</code> 和 <code>bananas</code> 都是食物</li>
+<li><code>like apples</code> 和 <code>like bananas</code> 的模式相近</li>
+<li>没见过的相似搭配也许仍然合理</li>
+</ul>
+<p>也就是说，n-gram 依赖的是“显式出现过没有”，而不是“结构上像不像”。</p>
+<h3 id="74-smoothing">7.4 smoothing 能缓解，但不能根治<a class="headerlink" href="#74-smoothing" title="Permanent link">&para;</a></h3>
+<p>传统语言模型里确实发展出了很多 smoothing 方法，用来缓解“没见过组合概率为 0”的问题。</p>
+<p>例如：</p>
+<ul>
+<li>Laplace smoothing</li>
+<li>Good-Turing</li>
+<li>Kneser-Ney</li>
+</ul>
+<p>这些方法很重要，但它们主要是在统计层面做修补。</p>
+<p>它们能缓解稀疏问题，却不能从根本上解决两个核心限制：</p>
+<ul>
+<li>固定窗口太短</li>
+<li>无法学习连续空间中的相似性</li>
+</ul>
+<p>这就把我们自然带到了下一步：</p>
+<p>能不能不用“查统计表”的方式，而是让模型自己学一个更有泛化能力的函数？</p>
+<h2 id="8-n-gram">8. 从 n-gram 到神经语言模型<a class="headerlink" href="#8-n-gram" title="Permanent link">&para;</a></h2>
+<p>神经语言模型出现的核心动机，可以浓缩成一句话：</p>
+<p><strong>不要把语言模型做成一张巨大的离散统计表，而要把它做成一个可学习的函数。</strong></p>
+<p>这个变化非常关键。</p>
+<p>因为一旦你不用“每种上下文单独记一份计数”，而是改成“共享参数的神经网络”，很多 n-gram 做不到的事情就开始变得可能。</p>
+<h3 id="81">8.1 分布式表示：词不再只是孤立编号<a class="headerlink" href="#81" title="Permanent link">&para;</a></h3>
+<p>在第 3 章我们已经讲过 embedding。</p>
+<p>它的意义在这里真正体现出来了。</p>
+<p>传统 n-gram 里，一个 token 本质上只是离散符号。</p>
+<p>但在神经语言模型里，一个 token 会先被映射成一个连续向量。</p>
+<p>于是模型不再只看到：</p>
+<ul>
+<li><code>apple</code> 是 id 1521</li>
+<li><code>banana</code> 是 id 2088</li>
+</ul>
+<p>而是会看到它们各自的 embedding，并且这些向量可能在空间中比较接近。</p>
+<p>这就给了模型一种非常重要的能力：</p>
+<p>它可以在“相似 token”和“相似上下文”之间共享统计强度。</p>
+<h3 id="82">8.2 参数共享：没见过的组合也能有机会猜对<a class="headerlink" href="#82" title="Permanent link">&para;</a></h3>
+<p>神经网络的优势不只是把 token 变成向量，更重要的是：</p>
+<p>它学的是一个参数化函数。</p>
+<p>可以粗略写成：</p>
+<div class="arithmatex">\[
+P(x_t | x_{&lt;t}) = f_\theta(x_{&lt;t})
+\]</div>
+<p>这里的 <span class="arithmatex">\( f_\theta \)</span> 就是由参数 <span class="arithmatex">\( \theta \)</span> 控制的神经网络。</p>
+<p>这意味着：</p>
+<ul>
+<li>不同上下文之间可以共享参数</li>
+<li>相似模式可以互相帮助</li>
+<li>即使某个具体组合没在训练里完整出现过，模型也可能因为见过很多相似模式而给出合理预测</li>
+</ul>
+<p>这就是“泛化能力”提升的来源。</p>
+<h3 id="83">8.3 最小神经语言模型长什么样<a class="headerlink" href="#83" title="Permanent link">&para;</a></h3>
+<p>最简单的神经语言模型可以这样理解：</p>
+<ol>
+<li>把上下文 token id 映射成 embedding</li>
+<li>把这些 embedding 拼接或汇总</li>
+<li>送入一个神经网络</li>
+<li>输出对整个词表的打分</li>
+<li>经过 softmax，变成下一个 token 的概率分布</li>
+</ol>
+<p>写成流程就是：</p>
+<p><code>context ids -&gt; embeddings -&gt; neural network -&gt; logits -&gt; softmax -&gt; next-token probabilities</code></p>
+<p>这和 n-gram 的核心区别在于：</p>
+<ul>
+<li>n-gram：显式查表、做计数</li>
+<li>neural LM：隐式建模、共享参数</li>
+</ul>
+<h2 id="9-mlp-rnn-transformer">9. 从 MLP 到 RNN，再到 Transformer<a class="headerlink" href="#9-mlp-rnn-transformer" title="Permanent link">&para;</a></h2>
+<p>神经语言模型本身也不是一步到位变成今天的 GPT。</p>
+<p>它中间经历了几代典型结构。</p>
+<h3 id="91-mlp">9.1 MLP 语言模型<a class="headerlink" href="#91-mlp" title="Permanent link">&para;</a></h3>
+<p>比较早期的一类神经语言模型，会取一个固定长度的上下文窗口，
+把这些 token 的 embedding 拼接起来，然后送进 MLP。</p>
+<p>它已经比 n-gram 更强，因为：</p>
+<ul>
+<li>输入不再是离散计数，而是连续表示</li>
+<li>参数可以共享</li>
+<li>相似上下文可以迁移</li>
+</ul>
+<p>但它仍然有一个明显限制：</p>
+<p><strong>窗口长度通常还是固定的。</strong></p>
+<h3 id="92-rnn-lstm">9.2 RNN / LSTM 语言模型<a class="headerlink" href="#92-rnn-lstm" title="Permanent link">&para;</a></h3>
+<p>后面出现的 RNN、LSTM、GRU 等序列模型，尝试解决固定窗口的问题。</p>
+<p>它们的核心思想是：</p>
+<p>把过去的信息压到隐藏状态里，随着序列一步一步往后传。</p>
+<p>这样模型理论上可以利用更长的历史，而不必像 n-gram 或固定窗口 MLP 那样只盯着最近几个 token。</p>
+<p>不过 RNN 类模型也有自己的问题，比如：</p>
+<ul>
+<li>并行训练不方便</li>
+<li>长距离依赖仍然难学</li>
+<li>序列很长时训练效率和稳定性不理想</li>
+</ul>
+<h3 id="93-transformer">9.3 Transformer 语言模型<a class="headerlink" href="#93-transformer" title="Permanent link">&para;</a></h3>
+<p>Transformer 的出现，把语言模型又往前推了一大步。</p>
+<p>它最关键的变化是：</p>
+<p>模型不再只靠一个递归状态逐步传信息，而是可以通过 Attention 直接查看上下文中的其他位置。</p>
+<p>这让它在下面几件事上表现得更强：</p>
+<ul>
+<li>更容易建模长距离依赖</li>
+<li>更适合并行训练</li>
+<li>更适合大规模扩展</li>
+</ul>
+<p>这也是为什么现代大语言模型几乎都建立在 Transformer 之上。</p>
+<p>从这个角度看，第 5 章和第 6 章其实不是突然换了一个新话题，而是在回答：</p>
+<p><strong>既然我们已经知道语言模型需要更强的上下文建模能力，那么 Attention 和 Transformer 是怎么做到的？</strong></p>
+<h2 id="10-perplexity">10. perplexity：语言模型好不好，怎么衡量<a class="headerlink" href="#10-perplexity" title="Permanent link">&para;</a></h2>
+<p>既然语言模型输出的是概率分布，那我们就需要一个指标来衡量：</p>
+<p>模型对真实文本的预测到底好不好。</p>
+<p>一个经典指标就是 perplexity，通常记作 PPL。</p>
+<p>你可以先把它理解成：</p>
+<p><strong>模型面对真实下一个 token 时，有多“困惑”。</strong></p>
+<p>直觉上：</p>
+<ul>
+<li>如果模型总能把高概率分给正确 token，那么 perplexity 会比较低</li>
+<li>如果模型总是拿不准，或者经常把高概率给错 token，那么 perplexity 会比较高</li>
+</ul>
+<p>所以一般来说：</p>
+<p><strong>perplexity 越低越好。</strong></p>
+<p>不过要注意两点：</p>
+<ul>
+<li>perplexity 主要适用于语言模型概率预测场景</li>
+<li>它能反映“预测性”，但不直接等于“生成效果一定更自然”</li>
+</ul>
+<p>这也是为什么现代 LLM 的评估不会只看 perplexity，还会结合下游任务和人工偏好评估。</p>
+<h2 id="11">11. 从直觉到实现：语言模型训练时到底在干什么<a class="headerlink" href="#11" title="Permanent link">&para;</a></h2>
+<p>到这里，我们可以把训练流程串起来了。</p>
+<p>假设有一句 token 序列：</p>
+<p><code>[x1, x2, x3, x4, x5]</code></p>
+<p>训练时通常会构造这样的输入输出对：</p>
+<ul>
+<li>输入：<code>[x1]</code>，目标：预测 <code>x2</code></li>
+<li>输入：<code>[x1, x2]</code>，目标：预测 <code>x3</code></li>
+<li>输入：<code>[x1, x2, x3]</code>，目标：预测 <code>x4</code></li>
+<li>输入：<code>[x1, x2, x3, x4]</code>，目标：预测 <code>x5</code></li>
+</ul>
+<p>也就是说，语言模型训练的本质就是：</p>
+<p>不断读取前文，然后让模型把真实下一个 token 的概率拉高。</p>
+<p>如果你把它和第 2 章的训练循环联系起来，就会发现它其实非常统一：</p>
+<ul>
+<li>前向传播：输出每一步对下一个 token 的概率分布</li>
+<li>计算 loss：真实 token 的负对数似然</li>
+<li>反向传播：更新参数</li>
+</ul>
+<p>所以从工程视角看，语言模型并没有脱离你已经学过的训练框架；
+它只是把监督信号换成了“下一个 token 是什么”。</p>
+<h2 id="12-bigram-language-model">12. 最小代码实现：bigram language model<a class="headerlink" href="#12-bigram-language-model" title="Permanent link">&para;</a></h2>
+<p>下面给一个最小 bigram 统计实现，只用来帮助你建立直觉。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">Counter</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">corpus</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="p">[</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;love&quot;</span><span class="p">,</span> <span class="s2">&quot;NLP&quot;</span><span class="p">],</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="p">[</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;love&quot;</span><span class="p">,</span> <span class="s2">&quot;deep&quot;</span><span class="p">,</span> <span class="s2">&quot;learning&quot;</span><span class="p">],</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="p">[</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;enjoy&quot;</span><span class="p">,</span> <span class="s2">&quot;learning&quot;</span><span class="p">],</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">]</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">bigram_counts</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">Counter</span><span class="p">)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">corpus</span><span class="p">:</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="k">for</span> <span class="n">prev_token</span><span class="p">,</span> <span class="n">next_token</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sentence</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">sentence</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        <span class="n">bigram_counts</span><span class="p">[</span><span class="n">prev_token</span><span class="p">][</span><span class="n">next_token</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">def</span><span class="w"> </span><span class="nf">predict_next</span><span class="p">(</span><span class="n">prev_token</span><span class="p">):</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">bigram_counts</span><span class="p">[</span><span class="n">prev_token</span><span class="p">]</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counter</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="k">return</span> <span class="p">{</span><span class="n">token</span><span class="p">:</span> <span class="n">count</span> <span class="o">/</span> <span class="n">total</span> <span class="k">for</span> <span class="n">token</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">counter</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="nb">print</span><span class="p">(</span><span class="n">predict_next</span><span class="p">(</span><span class="s2">&quot;I&quot;</span><span class="p">))</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="nb">print</span><span class="p">(</span><span class="n">predict_next</span><span class="p">(</span><span class="s2">&quot;love&quot;</span><span class="p">))</span>
+</span></code></pre></div>
+<p>可能输出：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span><span class="s1">&#39;love&#39;</span><span class="p">:</span> <span class="mf">0.6667</span><span class="p">,</span> <span class="s1">&#39;enjoy&#39;</span><span class="p">:</span> <span class="mf">0.3333</span><span class="p">}</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">{</span><span class="s1">&#39;NLP&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;deep&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">}</span>
+</span></code></pre></div>
+<p>这个代码虽然非常简单，但已经完整体现了 n-gram 的核心思想：</p>
+<ul>
+<li>用上下文做 key</li>
+<li>用下一个 token 的计数构造条件概率</li>
+<li>用统计频率来近似语言规律</li>
+</ul>
+<p>如果你继续往前走一步，把“查统计表”换成“embedding + 神经网络”，就进入神经语言模型的世界了。</p>
+<h2 id="13">13. 常见误区<a class="headerlink" href="#13" title="Permanent link">&para;</a></h2>
+<h3 id="1_1">误区 1：语言模型就是在背答案<a class="headerlink" href="#1_1" title="Permanent link">&para;</a></h3>
+<p>这不准确。</p>
+<p>语言模型学到的是条件概率分布，而不是固定问答对。</p>
+<p>看起来像“知道答案”，本质上是它在大量上下文统计和参数共享中学到了什么 token 更可能出现。</p>
+<h3 id="2next-token-prediction">误区 2：next-token prediction 太简单，所以学不到复杂能力<a class="headerlink" href="#2next-token-prediction" title="Permanent link">&para;</a></h3>
+<p>这也是一个常见误解。</p>
+<p>单步目标看起来简单，但因为训练数据量巨大、上下文丰富、模型参数很多，
+所以为了持续把“下一个 token”预测好，模型会被迫学到：</p>
+<ul>
+<li>语法</li>
+<li>搭配</li>
+<li>事实模式</li>
+<li>推理痕迹中的统计结构</li>
+</ul>
+<p>也就是说，简单目标不代表学到的能力简单。</p>
+<h3 id="3n-gram-transformer">误区 3：n-gram 和 Transformer 是完全无关的两件事<a class="headerlink" href="#3n-gram-transformer" title="Permanent link">&para;</a></h3>
+<p>并不是。</p>
+<p>它们都在做语言模型，只是建模条件概率的方式不同。</p>
+<p>可以把 n-gram 看成语言模型发展的早期形态，
+把神经语言模型和 Transformer 看成在同一目标上的更强实现。</p>
+<h2 id="14">14. 面试问题<a class="headerlink" href="#14" title="Permanent link">&para;</a></h2>
+<h3 id="q1">Q1：语言模型本质上在做什么？<a class="headerlink" href="#q1" title="Permanent link">&para;</a></h3>
+<p>语言模型本质上是在估计 token 序列的概率。训练时通常表现为：给定前文，预测下一个 token 的条件概率。</p>
+<h3 id="q2-next-token-prediction">Q2：为什么 next-token prediction 可以用于训练整个语言模型？<a class="headerlink" href="#q2-next-token-prediction" title="Permanent link">&para;</a></h3>
+<p>因为根据 Chain Rule，整个序列的联合概率可以分解成一系列“给定前文预测下一个 token”的条件概率乘积。</p>
+<h3 id="q3n-gram">Q3：n-gram 的核心问题是什么？<a class="headerlink" href="#q3n-gram" title="Permanent link">&para;</a></h3>
+<p>核心问题包括：数据稀疏、上下文窗口太短、泛化能力差。它依赖离散统计，难以利用相似 token 和相似上下文之间的结构信息。</p>
+<h3 id="q4-n-gram">Q4：神经语言模型相比 n-gram 的主要提升是什么？<a class="headerlink" href="#q4-n-gram" title="Permanent link">&para;</a></h3>
+<p>它通过 embedding 和参数共享，把离散统计表变成可学习函数，因而具有更好的泛化能力，也更容易建模复杂上下文。</p>
+<h3 id="q5-transformer">Q5：为什么后来语言模型会走向 Transformer？<a class="headerlink" href="#q5-transformer" title="Permanent link">&para;</a></h3>
+<p>因为 Transformer 在长距离依赖建模、并行训练效率和大规模扩展性上，比早期方法更有优势。</p>
+<h2 id="15">15. 本章小结<a class="headerlink" href="#15" title="Permanent link">&para;</a></h2>
+<p>这一章你应该抓住的，不是某个历史名词，而是一条非常稳定的主线：</p>
+<ul>
+<li>语言模型的目标是估计序列概率</li>
+<li>这可以通过 next-token prediction 来实现</li>
+<li>n-gram 是最早期的条件概率统计方法</li>
+<li>它让语言模型变得可计算，但也暴露了数据稀疏、短窗口和泛化差的问题</li>
+<li>神经语言模型通过 embedding 和参数共享，开始真正具备泛化能力</li>
+<li>Transformer 则是在这条路上继续发展出的更强结构</li>
+</ul>
+<p>所以读完这一章之后，你应该已经知道：</p>
+<p>后面要学 Attention，并不是因为它“很火”，而是因为我们已经遇到了一个真实的建模问题：</p>
+<p><strong>语言模型需要更强的上下文建模能力。</strong></p>
+<p>下一章，我们就正式进入这个问题的核心答案之一：</p>
+<p>Attention 机制。</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Ferris-Liu" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "navigation.instant", "navigation.instant.progress", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

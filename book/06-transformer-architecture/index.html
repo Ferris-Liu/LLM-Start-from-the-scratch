@@ -1,0 +1,3641 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="一个AI炼丹师的大模型学习笔记，从 Transformer、预训练、微调到 RAG、Agent 与部署实践。">
+      
+      
+        <meta name="author" content="FerrisLIU">
+      
+      
+        <link rel="canonical" href="https://ferris-liu.github.io/LLM-Start-from-the-scratch/book/06-transformer-architecture/">
+      
+      
+        <link rel="prev" href="../05-attention/">
+      
+      
+        <link rel="next" href="../07-mini-gpt/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第 6 章：Transformer 架构 - 机器于此理解语言</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#6-transformer" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="机器于此理解语言" class="md-header__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器于此理解语言
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第 6 章：Transformer 架构
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到浅色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换到浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换到深色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="机器于此理解语言" class="md-nav__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器于此理解语言
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about-author/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    作者介绍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前言
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何阅读这本书
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书提纲与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    从这里开始
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    从这里开始
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书导航
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    全书导航
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-role-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 0 章：大模型岗位地图与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 1 · 基础补齐
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 1 · 基础补齐
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pytorch-training-loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 2 章：PyTorch 与训练循环
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-nlp-text-representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 3 章：NLP 基础与文本表示
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-ngram-to-neural-lm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章：从 n-gram 到神经语言模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 3 · Transformer 核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 3 · Transformer 核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章：Transformer 架构
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章：Transformer 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 为什么只有 Attention 还不够
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 为什么只有 Attention 还不够">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 没有位置信息，模型不知道顺序
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 只有信息交互还不够，还需要更强表达能力
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 网络变深之后，训练会更困难
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 激活分布不稳定，需要规范化
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Transformer 的核心组成模块
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Transformer 的核心组成模块">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-token-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Token Embedding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-positional-encoding-positional-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Positional Encoding / Positional Embedding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-multi-head-self-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Multi-Head Self-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-feed-forward-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Feed-Forward Network
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-residual-connection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Residual Connection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#46-layernorm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.6 LayerNorm
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-transformer-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 一个 Transformer Block 是怎么串起来的
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 一个 Transformer Block 是怎么串起来的">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 输入表示
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-self-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 进入 self-attention 子层
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-layernorm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 残差连接和 LayerNorm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-ffn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 进入 FFN 子层
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 多层堆叠
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-transformer_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 三类主流 Transformer 架构
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#61-encoder-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Encoder-only
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#62-decoder-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Decoder-only
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#63-encoder-decoder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Encoder-decoder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 三类架构的直观对比
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-gpt-decoder-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. GPT 为什么采用 decoder-only
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. GPT 为什么采用 decoder-only">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-next-token-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 它和 next-token prediction 完全对齐
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 它和生成过程完全一致
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 架构更简洁，更容易做大规模预训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 它特别适合“通用生成器”这个产品形态
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 从结构图到代码骨架
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1transformer-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：Transformer 就是 Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-self-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：有了 self-attention 就天然知道顺序
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3ffn-mlp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：FFN 只是一个可有可无的小 MLP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4bert-gpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 4：BERT 和 GPT 的区别只是一个双向一个单向
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5decoder-only-encoder-decoder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 5：decoder-only 比 encoder-decoder 更“低级”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-transformer-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：一个标准 Transformer block 通常由哪些部分组成？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：为什么 Transformer 需要位置编码？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3ffn-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：FFN 在 Transformer 里起什么作用？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4encoder-onlydecoder-onlyencoder-decoder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：encoder-only、decoder-only、encoder-decoder 的区别是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5gpt-decoder-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：GPT 为什么采用 decoder-only？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-tokenizer-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章：Tokenizer 与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-pretraining/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 9 章：预训练 Pretraining
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-scaling-law/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 10 章：Scaling Law 与大模型为什么变大
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 11 章：LLM 评估
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 5 · 后训练与微调
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 5 · 后训练与微调
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-sft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 12 章：Supervised Fine-Tuning，SFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-lora-qlora-peft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 13 章：参数高效微调：LoRA / QLoRA / PEFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 14 章：偏好对齐：RLHF / DPO / RLAIF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 6 · LLM 应用工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 6 · LLM 应用工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-embedding-retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 15 章：Embedding、向量数据库与语义检索
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-llmops-deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 18 章：LLMOps、部署与生产化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前沿技术观察
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    前沿技术观察
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_tech/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术条目池
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    分析报告索引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/reports/deepseek-v4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek-V4 技术分析报告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/_report_template/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通用报告模板
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 为什么只有 Attention 还不够
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 为什么只有 Attention 还不够">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 没有位置信息，模型不知道顺序
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 只有信息交互还不够，还需要更强表达能力
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 网络变深之后，训练会更困难
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 激活分布不稳定，需要规范化
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Transformer 的核心组成模块
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Transformer 的核心组成模块">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-token-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Token Embedding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-positional-encoding-positional-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Positional Encoding / Positional Embedding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-multi-head-self-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Multi-Head Self-Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-feed-forward-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Feed-Forward Network
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-residual-connection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Residual Connection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#46-layernorm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.6 LayerNorm
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-transformer-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 一个 Transformer Block 是怎么串起来的
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 一个 Transformer Block 是怎么串起来的">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 输入表示
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-self-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 进入 self-attention 子层
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-layernorm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 残差连接和 LayerNorm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-ffn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 进入 FFN 子层
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 多层堆叠
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-transformer_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 三类主流 Transformer 架构
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#61-encoder-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Encoder-only
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#62-decoder-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Decoder-only
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#63-encoder-decoder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Encoder-decoder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#64" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 三类架构的直观对比
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-gpt-decoder-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. GPT 为什么采用 decoder-only
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. GPT 为什么采用 decoder-only">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-next-token-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 它和 next-token prediction 完全对齐
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 它和生成过程完全一致
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 架构更简洁，更容易做大规模预训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 它特别适合“通用生成器”这个产品形态
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 从结构图到代码骨架
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1transformer-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 1：Transformer 就是 Attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-self-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 2：有了 self-attention 就天然知道顺序
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3ffn-mlp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 3：FFN 只是一个可有可无的小 MLP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4bert-gpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 4：BERT 和 GPT 的区别只是一个双向一个单向
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5decoder-only-encoder-decoder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        误区 5：decoder-only 比 encoder-decoder 更“低级”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-transformer-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1：一个标准 Transformer block 通常由哪些部分组成？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2：为什么 Transformer 需要位置编码？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3ffn-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3：FFN 在 Transformer 里起什么作用？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4encoder-onlydecoder-onlyencoder-decoder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4：encoder-only、decoder-only、encoder-decoder 的区别是什么？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5gpt-decoder-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5：GPT 为什么采用 decoder-only？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 本章小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/edit/main/docs/book/06-transformer-architecture.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="6-transformer">第 6 章：Transformer 架构<a class="headerlink" href="#6-transformer" title="Permanent link">&para;</a></h1>
+<h2 id="1">1. 本章要解决的问题<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>第 5 章里，我们已经理解了 Attention 的核心直觉：</p>
+<p><strong>模型会根据当前 token 的需求，去上下文里有选择地读取信息。</strong></p>
+<p>这一步非常关键，但它还不是一个完整的大模型架构。</p>
+<p>因为当我们真的想把语言模型做出来时，很快会遇到几个更具体的问题：</p>
+<ul>
+<li>只有 Attention，模型怎么知道 token 的先后顺序？</li>
+<li>只有上下文交互，没有额外非线性变换，表达能力够吗？</li>
+<li>如果把网络堆得很深，训练为什么还能稳定？</li>
+<li>为什么后来会分化出 BERT、GPT、T5 这些不同结构？</li>
+</ul>
+<p>所以这一章要解决的，不再是：</p>
+<p><strong>Attention 是什么。</strong></p>
+<p>而是：</p>
+<p><strong>Attention 是怎样被组织进一个完整的 Transformer，并进一步演化成现代 LLM 主流架构的。</strong></p>
+<p>从全书结构上看，这一章有三个作用：</p>
+<ul>
+<li>它承接第 5 章，把 Attention 从“单个机制”升级成“完整系统”</li>
+<li>它为第 7 章的 Mini-GPT 提供结构层面的蓝图</li>
+<li>它也为后面预训练、微调、RAG、Agent 等章节建立统一模型视角</li>
+</ul>
+<p>如果第 5 章回答的是：</p>
+<p><strong>模型怎样动态关注上下文。</strong></p>
+<p>那么第 6 章回答的就是：</p>
+<p><strong>这些能力怎样被拼装成一个真正可训练、可扩展、可用于不同任务的神经网络架构。</strong></p>
+<h2 id="2">2. 你学完后应该会什么<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>能用自己的话解释 Transformer 为什么不只是 Attention</li>
+<li>能说明 token embedding、position、attention、FFN、残差连接、LayerNorm 分别做什么</li>
+<li>能画出一个最小 Transformer block 的数据流</li>
+<li>能区分 encoder-only、decoder-only、encoder-decoder 三类架构</li>
+<li>能解释 GPT 为什么采用 decoder-only</li>
+<li>能把这一章的结构理解直接映射到第 7 章的 Mini-GPT 代码里</li>
+</ul>
+<h2 id="3-attention">3. 为什么只有 Attention 还不够<a class="headerlink" href="#3-attention" title="Permanent link">&para;</a></h2>
+<p>很多人第一次学 Transformer 时，容易把它理解成一句话：</p>
+<p><code>Transformer = Attention</code></p>
+<p>这不算完全错，但不完整。</p>
+<p>更准确地说，Transformer 是：</p>
+<p><strong>以 Attention 为核心，再配上一组让深层网络可以表达、训练和扩展的辅助模块。</strong></p>
+<p>如果只有 Attention，而没有其他配套设计，会出现几个明显问题。</p>
+<h3 id="31">3.1 没有位置信息，模型不知道顺序<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p>Attention 本身并不天然理解顺序。</p>
+<p>假设输入两个序列：</p>
+<ul>
+<li><code>dog bites man</code></li>
+<li><code>man bites dog</code></li>
+</ul>
+<p>如果我们只把 token 向量丢进 self-attention，而不给任何位置相关信息，那么模型看到的更像是一个“词袋集合”，而不是一个有先后顺序的序列。</p>
+<p>但语言的意义高度依赖顺序。</p>
+<p>所以 Transformer 必须额外引入：</p>
+<ul>
+<li>positional encoding</li>
+<li>或 positional embedding</li>
+</ul>
+<p>来告诉模型：</p>
+<p><strong>这个 token 不只是“是什么”，还要知道“它在第几个位置”。</strong></p>
+<h3 id="32">3.2 只有信息交互还不够，还需要更强表达能力<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<p>Attention 擅长做的是：</p>
+<p><strong>让每个位置从其他位置读取相关信息。</strong></p>
+<p>但如果整个网络只反复做“加权读取”，而没有额外的非线性变换，那么模型的表达能力会受限。</p>
+<p>这就像一个团队里所有人都在互相交换信息，但没有人对信息做进一步加工、抽象和重组。</p>
+<p>所以 Transformer 在 attention 之后，通常还会接一个逐位置的前馈网络（Feed-Forward Network, FFN）。</p>
+<p>它的作用可以先粗略理解成：</p>
+<ul>
+<li>attention 负责“信息路由”</li>
+<li>FFN 负责“特征变换”</li>
+</ul>
+<p>两者组合起来，模型才能既会看上下文，也会处理上下文。</p>
+<h3 id="33">3.3 网络变深之后，训练会更困难<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<p>现代大模型不是一两层，而是很多层 block 堆起来的。</p>
+<p>一旦网络变深，就会遇到经典问题：</p>
+<ul>
+<li>梯度传播困难</li>
+<li>训练不稳定</li>
+<li>前面学到的表示容易被后面破坏</li>
+</ul>
+<p>所以 Transformer 借鉴了残差连接（Residual Connection）的思想。</p>
+<p>也就是每个子层都不是只输出新结果，而是把输入保留下来，再和新结果相加。</p>
+<p>直觉上可以理解成：</p>
+<p><strong>模型不是每一层都推翻前一层，而是在原有表示上做增量修正。</strong></p>
+<p>这会让深层网络更容易训练。</p>
+<h3 id="34">3.4 激活分布不稳定，需要规范化<a class="headerlink" href="#34" title="Permanent link">&para;</a></h3>
+<p>深层神经网络训练时，一个常见问题是不同层输入分布会不断变化，导致训练不稳定。</p>
+<p>Transformer 里广泛使用 LayerNorm，作用可以先简单理解成：</p>
+<p><strong>把每个位置上的表示拉回一个更稳定的数值范围。</strong></p>
+<p>这样做的好处是：</p>
+<ul>
+<li>梯度更稳定</li>
+<li>训练更容易收敛</li>
+<li>深层堆叠时更可靠</li>
+</ul>
+<p>所以到这里我们就能看出：</p>
+<p>Transformer 不是把 Attention 单独拿出来直接堆很多层，而是围绕它补齐了一整套工程化和训练稳定性设计。</p>
+<h2 id="4-transformer">4. Transformer 的核心组成模块<a class="headerlink" href="#4-transformer" title="Permanent link">&para;</a></h2>
+<p>现在我们把完整 Transformer 先拆成几个最重要的零件。</p>
+<h3 id="41-token-embedding">4.1 Token Embedding<a class="headerlink" href="#41-token-embedding" title="Permanent link">&para;</a></h3>
+<p>模型拿到的原始输入并不是单词本身，而是 token id。</p>
+<p>例如一句话：</p>
+<p><code>I love NLP</code></p>
+<p>经过 tokenizer 之后，可能变成：</p>
+<p><code>[314, 892, 10577]</code></p>
+<p>但这些整数本身没有语义。</p>
+<p>所以第一步通常要做 embedding lookup，把每个 token id 映射成一个稠密向量：</p>
+<div class="arithmatex">\[
+e_i = E[x_i]
+\]</div>
+<p>其中：</p>
+<ul>
+<li><span class="arithmatex">\( x_i \)</span> 是第 <span class="arithmatex">\( i \)</span> 个 token id</li>
+<li><code>E</code> 是 embedding matrix</li>
+<li><span class="arithmatex">\( e_i \)</span> 是该 token 的向量表示</li>
+</ul>
+<p>可以把它理解成：</p>
+<p><strong>token embedding 负责回答“这个 token 是谁”。</strong></p>
+<h3 id="42-positional-encoding-positional-embedding">4.2 Positional Encoding / Positional Embedding<a class="headerlink" href="#42-positional-encoding-positional-embedding" title="Permanent link">&para;</a></h3>
+<p>有了 token embedding 之后，模型还缺一件事：</p>
+<p><strong>这个 token 在序列中的位置。</strong></p>
+<p>最早的 Transformer 论文里使用的是 sinusoidal positional encoding；
+而 GPT、BERT 等很多现代模型更常用可学习的 positional embedding。</p>
+<p>无论具体实现是什么，本质上都是要把“位置信息”注入表示中。</p>
+<p>最常见的做法是直接相加：</p>
+<div class="arithmatex">\[
+h_i^{(0)} = e_i + p_i
+\]</div>
+<p>其中 <span class="arithmatex">\( p_i \)</span> 表示第 <span class="arithmatex">\( i \)</span> 个位置的向量。</p>
+<p>这一层负责回答：</p>
+<p><strong>这个 token 不只是“谁”，还要知道“它在哪”。</strong></p>
+<h3 id="43-multi-head-self-attention">4.3 Multi-Head Self-Attention<a class="headerlink" href="#43-multi-head-self-attention" title="Permanent link">&para;</a></h3>
+<p>这部分是 Transformer 的核心。</p>
+<p>第 5 章里我们已经见过单头 attention 的基本形式：</p>
+<div class="arithmatex">\[
+\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\]</div>
+<p>而在 Transformer 里，通常不会只用一个 attention head，而是使用 multi-head attention。</p>
+<p>它的直觉是：</p>
+<p><strong>让模型从多个子空间、多个关系视角同时观察上下文。</strong></p>
+<p>例如有的 head 可能更关注：</p>
+<ul>
+<li>主谓关系</li>
+<li>代词指代</li>
+<li>局部搭配</li>
+<li>长距离依赖</li>
+</ul>
+<p>严格说，head 不一定会自动学成这么清晰的人类语法功能，但这个直觉足够帮助我们理解它为什么比单头更强。</p>
+<p>multi-head 的常见写法是：</p>
+<div class="arithmatex">\[
+\text{MultiHead}(X) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)W_O
+\]</div>
+<p>其中每个 <code>head</code> 都有自己的一组 <span class="arithmatex">\( W_Q, W_K, W_V \)</span>。</p>
+<h3 id="44-feed-forward-network">4.4 Feed-Forward Network<a class="headerlink" href="#44-feed-forward-network" title="Permanent link">&para;</a></h3>
+<p>attention 之后，Transformer 还会接一个 position-wise FFN。</p>
+<p>所谓 position-wise，意思是：</p>
+<p><strong>每个位置都经过同一套两层 MLP，但不同位置之间在这一步不直接交互。</strong></p>
+<p>常见形式是：</p>
+<div class="arithmatex">\[
+\text{FFN}(x) = W_2 \sigma(W_1 x + b_1) + b_2
+\]</div>
+<p>这里的激活函数 <span class="arithmatex">\( \sigma \)</span> 可能是 ReLU、GELU 等。</p>
+<p>它的主要作用不是建模序列关系，而是：</p>
+<ul>
+<li>提升非线性表达能力</li>
+<li>对 attention 汇总后的特征做进一步加工</li>
+</ul>
+<p>所以可以把它理解成：</p>
+<ul>
+<li>attention 决定“看谁”</li>
+<li>FFN 决定“怎么处理看到的内容”</li>
+</ul>
+<h3 id="45-residual-connection">4.5 Residual Connection<a class="headerlink" href="#45-residual-connection" title="Permanent link">&para;</a></h3>
+<p>Transformer 的每个核心子层外面，通常都会包一层残差连接。</p>
+<p>例如：</p>
+<div class="arithmatex">\[
+x' = x + \text{Sublayer}(x)
+\]</div>
+<p>这意味着子层不是完全替换旧表示，而是在旧表示基础上叠加一个修正项。</p>
+<p>它的价值在深层网络里非常大：</p>
+<ul>
+<li>缓解梯度消失</li>
+<li>保留原始信息通路</li>
+<li>让训练更稳定</li>
+</ul>
+<p>很多时候你会发现，真正让深层模型能“堆起来”的，不只是核心模块有多聪明，还有这些看起来很朴素的训练技巧。</p>
+<h3 id="46-layernorm">4.6 LayerNorm<a class="headerlink" href="#46-layernorm" title="Permanent link">&para;</a></h3>
+<p>Transformer 中另一个关键零件是 LayerNorm。</p>
+<p>它通常放在子层附近，用于稳定训练。</p>
+<p>你可以先把它理解成：</p>
+<p><strong>对每个样本、每个位置的隐藏表示做标准化，让不同层之间的数值分布更可控。</strong></p>
+<p>从直觉上说，它像是在提醒网络：</p>
+<p>“不要让某一层的激活值突然爆得太大，也不要让尺度飘得太厉害。”</p>
+<p>现代很多实现里，还会区分：</p>
+<ul>
+<li>Post-LN：先子层，再残差，再 LayerNorm</li>
+<li>Pre-LN：先 LayerNorm，再进子层，再做残差</li>
+</ul>
+<p>工程上 Pre-LN 在深层训练里通常更稳定，所以很多现代 LLM 实现更偏向这种写法。</p>
+<h2 id="5-transformer-block">5. 一个 Transformer Block 是怎么串起来的<a class="headerlink" href="#5-transformer-block" title="Permanent link">&para;</a></h2>
+<p>理解完零件之后，接下来最重要的问题是：</p>
+<p><strong>这些零件到底按什么顺序工作？</strong></p>
+<p>先看最经典的 Transformer block 思路。</p>
+<h3 id="51">5.1 输入表示<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<p>设输入序列长度为 <span class="arithmatex">\( T \)</span>，隐藏维度为 <span class="arithmatex">\( d_{model} \)</span>。</p>
+<p>输入 token ids 先经过 embedding，得到：</p>
+<div class="arithmatex">\[
+X \in \mathbb{R}^{T \times d_{model}}
+\]</div>
+<p>再加上位置向量：</p>
+<div class="arithmatex">\[
+H^{(0)} = X_{token} + X_{pos}
+\]</div>
+<p>这时每个位置已经同时携带了：</p>
+<ul>
+<li>token 语义信息</li>
+<li>位置信息</li>
+</ul>
+<h3 id="52-self-attention">5.2 进入 self-attention 子层<a class="headerlink" href="#52-self-attention" title="Permanent link">&para;</a></h3>
+<p>然后每个位置通过 self-attention 与整段上下文交互。</p>
+<p>如果是普通 Transformer encoder，一个位置可以看所有 token；
+如果是 GPT 这样的生成模型，则要加 causal mask，禁止当前位置偷看未来。</p>
+<p>这一层的作用是：</p>
+<p><strong>让每个 token 根据当前任务，从整段上下文中读取自己需要的信息。</strong></p>
+<h3 id="53-layernorm">5.3 残差连接和 LayerNorm<a class="headerlink" href="#53-layernorm" title="Permanent link">&para;</a></h3>
+<p>attention 子层之后，通常会接：</p>
+<ul>
+<li>residual</li>
+<li>LayerNorm</li>
+</ul>
+<p>写成简化形式可以是：</p>
+<div class="arithmatex">\[
+H' = \text{LayerNorm}(H + \text{Attention}(H))
+\]</div>
+<p>或者在 Pre-LN 结构里写成：</p>
+<div class="arithmatex">\[
+H' = H + \text{Attention}(\text{LayerNorm}(H))
+\]</div>
+<p>两种写法都很常见，核心思想不变：</p>
+<p><strong>attention 负责信息交互，残差和规范化负责让训练稳定。</strong></p>
+<h3 id="54-ffn">5.4 进入 FFN 子层<a class="headerlink" href="#54-ffn" title="Permanent link">&para;</a></h3>
+<p>接下来每个位置再单独进入 FFN：</p>
+<div class="arithmatex">\[
+H'' = \text{LayerNorm}(H' + \text{FFN}(H'))
+\]</div>
+<p>或对应的 Pre-LN 版本。</p>
+<p>这一步不直接建模位置之间的关系，而是对当前表示做更强的非线性变换。</p>
+<h3 id="55">5.5 多层堆叠<a class="headerlink" href="#55" title="Permanent link">&para;</a></h3>
+<p>一个 block 还不够。</p>
+<p>Transformer 的能力很大程度上来自：</p>
+<p><strong>把这样的 block 反复堆叠很多层。</strong></p>
+<p>随着层数加深，模型可以逐步形成：</p>
+<ul>
+<li>更复杂的上下文表示</li>
+<li>更抽象的语义特征</li>
+<li>更强的生成或理解能力</li>
+</ul>
+<p>所以 Transformer 的一个核心思想其实很朴素：</p>
+<p><strong>同一种高质量 block，稳定地重复很多次。</strong></p>
+<h2 id="6-transformer_1">6. 三类主流 Transformer 架构<a class="headerlink" href="#6-transformer_1" title="Permanent link">&para;</a></h2>
+<p>理解 block 之后，下一步就能看懂为什么后来会出现不同“家族”。</p>
+<p>虽然大家底层都来自 Transformer，但根据任务目标不同，主流架构大致分成三类。</p>
+<h2 id="61-encoder-only">6.1 Encoder-only<a class="headerlink" href="#61-encoder-only" title="Permanent link">&para;</a></h2>
+<p>代表模型：BERT、RoBERTa</p>
+<p>这类模型主要由 encoder stack 构成。</p>
+<p>它的特点是：</p>
+<ul>
+<li>每个位置通常可以看到左右两边上下文</li>
+<li>更适合做表示学习和理解任务</li>
+<li>常见于分类、抽取、匹配、判别任务</li>
+</ul>
+<p>为什么它擅长理解？</p>
+<p>因为对于一句完整输入，encoder-only 模型在编码时可以双向整合上下文。</p>
+<p>例如句子里一个词的表示，不仅能参考左边，也能参考右边。</p>
+<p>这对下面这些任务很有帮助：</p>
+<ul>
+<li>句子分类</li>
+<li>命名实体识别</li>
+<li>文本匹配</li>
+<li>检索编码</li>
+</ul>
+<p>但它天然不是最直接的生成架构，因为生成任务要求模型在第 <code>t</code> 步只能依赖前 <code>t-1</code> 步。</p>
+<h2 id="62-decoder-only">6.2 Decoder-only<a class="headerlink" href="#62-decoder-only" title="Permanent link">&para;</a></h2>
+<p>代表模型：GPT 系列、LLaMA、Qwen 等大多数现代自回归 LLM</p>
+<p>这类模型只保留 decoder stack，但在语言建模场景里，通常只用到：</p>
+<ul>
+<li>masked self-attention</li>
+<li>FFN</li>
+<li>残差连接</li>
+<li>LayerNorm</li>
+</ul>
+<p>而不一定使用原始 seq2seq Transformer decoder 里的 cross-attention。</p>
+<p>它的核心特点是：</p>
+<ul>
+<li>使用 causal mask</li>
+<li>每个位置只能看见自己和左边上下文</li>
+<li>天然适配 next-token prediction</li>
+</ul>
+<p>例如训练时：</p>
+<p>输入：</p>
+<p><code>I love deep</code></p>
+<p>目标：</p>
+<p>让模型预测下一个 token 更可能是 <code>learning</code></p>
+<p>这个目标和 decoder-only 结构是完全对齐的。</p>
+<p>所以它特别适合：</p>
+<ul>
+<li>文本续写</li>
+<li>对话生成</li>
+<li>代码生成</li>
+<li>通用自回归语言建模</li>
+</ul>
+<h2 id="63-encoder-decoder">6.3 Encoder-decoder<a class="headerlink" href="#63-encoder-decoder" title="Permanent link">&para;</a></h2>
+<p>代表模型：T5、BART</p>
+<p>这类模型同时保留 encoder 和 decoder 两部分。</p>
+<p>它的典型工作方式是：</p>
+<ul>
+<li>encoder 先把输入序列编码成上下文表示</li>
+<li>decoder 再基于这些表示一步步生成输出</li>
+</ul>
+<p>这里 decoder 除了有 masked self-attention，还会多一个：</p>
+<ul>
+<li>cross-attention</li>
+</ul>
+<p>也就是 decoder 在生成时，不仅看自己前面已经生成的 token，还会去读取 encoder 输出。</p>
+<p>这种结构非常适合输入和输出都比较明确的 seq2seq 任务，例如：</p>
+<ul>
+<li>机器翻译</li>
+<li>摘要</li>
+<li>改写</li>
+<li>问答</li>
+</ul>
+<p>因为它天然支持：</p>
+<p><strong>先理解输入，再条件生成输出。</strong></p>
+<h2 id="64">6.4 三类架构的直观对比<a class="headerlink" href="#64" title="Permanent link">&para;</a></h2>
+<p>可以先把它们粗略记成下面这样：</p>
+<table>
+<thead>
+<tr>
+<th>架构类型</th>
+<th>代表模型</th>
+<th>上下文可见性</th>
+<th>更适合什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>encoder-only</td>
+<td>BERT</td>
+<td>双向</td>
+<td>理解、表示、判别</td>
+</tr>
+<tr>
+<td>decoder-only</td>
+<td>GPT</td>
+<td>仅左侧可见</td>
+<td>自回归生成</td>
+</tr>
+<tr>
+<td>encoder-decoder</td>
+<td>T5</td>
+<td>encoder 双向，decoder 左侧可见</td>
+<td>条件生成、seq2seq</td>
+</tr>
+</tbody>
+</table>
+<p>这张表不是为了背诵，而是帮助你建立一个特别重要的意识：</p>
+<p><strong>架构不是凭空选的，而是和训练目标、任务形式强相关。</strong></p>
+<h2 id="7-gpt-decoder-only">7. GPT 为什么采用 decoder-only<a class="headerlink" href="#7-gpt-decoder-only" title="Permanent link">&para;</a></h2>
+<p>这一节是本章最重要的落点之一。</p>
+<p>很多人会问：</p>
+<p>既然 encoder-decoder 看起来更完整，为什么 GPT 不走那条路，而是选择 decoder-only？</p>
+<p>原因可以从四个角度理解。</p>
+<h3 id="71-next-token-prediction">7.1 它和 next-token prediction 完全对齐<a class="headerlink" href="#71-next-token-prediction" title="Permanent link">&para;</a></h3>
+<p>GPT 的核心训练目标是：</p>
+<p><strong>给定前文，预测下一个 token。</strong></p>
+<p>这要求模型在第 <span class="arithmatex">\( t \)</span> 个位置只能看：</p>
+<ul>
+<li><span class="arithmatex">\( x_1 \)</span></li>
+<li><span class="arithmatex">\( x_2 \)</span></li>
+<li>...</li>
+<li><span class="arithmatex">\( x_{t-1} \)</span></li>
+</ul>
+<p>而 decoder-only + causal mask 恰好就是为这种约束设计的。</p>
+<p>所以它在结构上和训练目标天然一致。</p>
+<h3 id="72">7.2 它和生成过程完全一致<a class="headerlink" href="#72" title="Permanent link">&para;</a></h3>
+<p>推理时，GPT 的工作方式也是：</p>
+<ol>
+<li>读入当前上下文</li>
+<li>预测下一个 token 概率分布</li>
+<li>采样或选出一个 token</li>
+<li>把它拼回上下文</li>
+<li>继续下一步</li>
+</ol>
+<p>这本质上就是 decoder-only 的自回归生成过程。</p>
+<p>所以它的训练和推理在形式上非常统一。</p>
+<h3 id="73">7.3 架构更简洁，更容易做大规模预训练<a class="headerlink" href="#73" title="Permanent link">&para;</a></h3>
+<p>相较于 encoder-decoder，decoder-only 在通用语言建模场景下通常更直接：</p>
+<ul>
+<li>输入输出统一成一条 token 序列</li>
+<li>训练目标简单清晰</li>
+<li>模型设计更容易标准化</li>
+</ul>
+<p>这对于大规模预训练很重要。</p>
+<p>因为一旦训练范式足够统一，数据组织、并行训练、推理部署都会更顺。</p>
+<h3 id="74">7.4 它特别适合“通用生成器”这个产品形态<a class="headerlink" href="#74" title="Permanent link">&para;</a></h3>
+<p>ChatGPT、代码补全、写作助手、Agent 背后的大模型，本质上都强依赖一种能力：</p>
+<p><strong>给定已有上下文，持续生成后续 token。</strong></p>
+<p>而 decoder-only 恰好天然擅长这件事。</p>
+<p>所以从研究目标到产品形态，GPT 选择 decoder-only 都很自然。</p>
+<p>这并不意味着 encoder-only 或 encoder-decoder 不重要，而是说明：</p>
+<p><strong>对于通用自回归生成，decoder-only 是最顺手的架构。</strong></p>
+<h2 id="8">8. 从结构图到代码骨架<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<p>到这里，我们已经可以把 Transformer block 映射成代码里的模块关系。</p>
+<p>先看一个极简伪代码版本：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">TransformerBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">ln1</span> <span class="o">=</span> <span class="n">LayerNorm</span><span class="p">(</span><span class="n">d_model</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">attn</span> <span class="o">=</span> <span class="n">CausalSelfAttention</span><span class="p">(</span><span class="n">d_model</span><span class="p">,</span> <span class="n">n_heads</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">ln2</span> <span class="o">=</span> <span class="n">LayerNorm</span><span class="p">(</span><span class="n">d_model</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">ffn</span> <span class="o">=</span> <span class="n">MLP</span><span class="p">(</span><span class="n">d_model</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ln1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ffn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ln2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="k">return</span> <span class="n">x</span>
+</span></code></pre></div>
+<p>如果继续向上封装成一个最小 GPT，大致会是：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">GPT</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">token_emb</span> <span class="o">=</span> <span class="n">Embedding</span><span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">pos_emb</span> <span class="o">=</span> <span class="n">Embedding</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">([</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>            <span class="n">TransformerBlock</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_layers</span><span class="p">)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="p">])</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">ln_f</span> <span class="o">=</span> <span class="n">LayerNorm</span><span class="p">(</span><span class="n">d_model</span><span class="p">)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">lm_head</span> <span class="o">=</span> <span class="n">Linear</span><span class="p">(</span><span class="n">d_model</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">)</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        <span class="n">tok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_emb</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_emb</span><span class="p">(</span><span class="n">position_ids</span><span class="p">)</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        <span class="n">x</span> <span class="o">=</span> <span class="n">tok</span> <span class="o">+</span> <span class="n">pos</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>            <span class="n">x</span> <span class="o">=</span> <span class="n">block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ln_f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm_head</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        <span class="k">return</span> <span class="n">logits</span>
+</span></code></pre></div>
+<p>这里最重要的不是记代码，而是建立对应关系：</p>
+<ul>
+<li><code>token_emb</code>：token embedding</li>
+<li><code>pos_emb</code>：位置表示</li>
+<li><code>blocks</code>：重复堆叠的 Transformer blocks</li>
+<li><code>lm_head</code>：把隐藏状态映射回词表 logits</li>
+</ul>
+<p>这也正是第 7 章 Mini-GPT 要真正实现的内容。</p>
+<p>所以你可以把这一章当成：</p>
+<p><strong>第 7 章代码实现前的结构蓝图。</strong></p>
+<h2 id="9">9. 常见误区<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<h3 id="1transformer-attention">误区 1：Transformer 就是 Attention<a class="headerlink" href="#1transformer-attention" title="Permanent link">&para;</a></h3>
+<p>不对。</p>
+<p>更准确地说，Attention 是 Transformer 的核心模块，但完整 Transformer 还包括：</p>
+<ul>
+<li>位置表示</li>
+<li>FFN</li>
+<li>残差连接</li>
+<li>LayerNorm</li>
+<li>多层堆叠</li>
+</ul>
+<p>真正可训练、可扩展的大模型，是这些模块共同作用的结果。</p>
+<h3 id="2-self-attention">误区 2：有了 self-attention 就天然知道顺序<a class="headerlink" href="#2-self-attention" title="Permanent link">&para;</a></h3>
+<p>不对。</p>
+<p>self-attention 本身只是在 token 间计算相关性，并不自带“第几个位置”的概念。</p>
+<p>所以如果没有位置编码或位置嵌入，模型无法可靠地区分不同顺序。</p>
+<h3 id="3ffn-mlp">误区 3：FFN 只是一个可有可无的小 MLP<a class="headerlink" href="#3ffn-mlp" title="Permanent link">&para;</a></h3>
+<p>不对。</p>
+<p>FFN 不是装饰件，它承担了重要的非线性变换功能。</p>
+<p>如果只有 attention 而没有 FFN，模型的信息交互有了，但表示加工能力不够强。</p>
+<h3 id="4bert-gpt">误区 4：BERT 和 GPT 的区别只是一个双向一个单向<a class="headerlink" href="#4bert-gpt" title="Permanent link">&para;</a></h3>
+<p>这句话只说对了一半。</p>
+<p>两者的差别不只是可见性不同，还包括：</p>
+<ul>
+<li>训练目标不同</li>
+<li>更适合的任务类型不同</li>
+<li>输出使用方式不同</li>
+</ul>
+<p>所以它们不是同一个模型换个 mask 那么简单，而是面向不同任务偏好的两条路线。</p>
+<h3 id="5decoder-only-encoder-decoder">误区 5：decoder-only 比 encoder-decoder 更“低级”<a class="headerlink" href="#5decoder-only-encoder-decoder" title="Permanent link">&para;</a></h3>
+<p>不对。</p>
+<p>架构没有绝对高级和低级，只有任务匹配不匹配。</p>
+<p>对于通用自回归生成，decoder-only 往往更直接、更高效、更容易规模化；
+对于翻译、摘要等条件生成任务，encoder-decoder 往往更自然。</p>
+<h2 id="10">10. 面试问题<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<h3 id="q1-transformer-block">Q1：一个标准 Transformer block 通常由哪些部分组成？<a class="headerlink" href="#q1-transformer-block" title="Permanent link">&para;</a></h3>
+<p>通常包括：</p>
+<ul>
+<li>multi-head attention</li>
+<li>FFN</li>
+<li>residual connection</li>
+<li>LayerNorm</li>
+</ul>
+<p>在进入 block 之前，还会有 token embedding 和 position embedding。</p>
+<h3 id="q2-transformer">Q2：为什么 Transformer 需要位置编码？<a class="headerlink" href="#q2-transformer" title="Permanent link">&para;</a></h3>
+<p>因为 self-attention 本身不天然感知顺序。</p>
+<p>如果不显式注入位置信息，模型就很难区分：</p>
+<ul>
+<li><code>A B C</code></li>
+<li><code>C B A</code></li>
+</ul>
+<p>这样的序列差异。</p>
+<h3 id="q3ffn-transformer">Q3：FFN 在 Transformer 里起什么作用？<a class="headerlink" href="#q3ffn-transformer" title="Permanent link">&para;</a></h3>
+<p>attention 负责从上下文中聚合信息，FFN 负责对每个位置的表示做进一步非线性变换，提升表达能力。</p>
+<h3 id="q4encoder-onlydecoder-onlyencoder-decoder">Q4：encoder-only、decoder-only、encoder-decoder 的区别是什么？<a class="headerlink" href="#q4encoder-onlydecoder-onlyencoder-decoder" title="Permanent link">&para;</a></h3>
+<ul>
+<li>encoder-only 更偏理解和表示学习</li>
+<li>decoder-only 更偏自回归生成</li>
+<li>encoder-decoder 更偏条件生成和 seq2seq</li>
+</ul>
+<h3 id="q5gpt-decoder-only">Q5：GPT 为什么采用 decoder-only？<a class="headerlink" href="#q5gpt-decoder-only" title="Permanent link">&para;</a></h3>
+<p>因为 GPT 的训练目标是 next-token prediction，而 decoder-only 配合 causal mask 与这一目标天然对齐，训练和推理形式也保持一致。</p>
+<h2 id="11">11. 本章小结<a class="headerlink" href="#11" title="Permanent link">&para;</a></h2>
+<p>这一章最重要的结论可以浓缩成三句话：</p>
+<p>第一，Transformer 不只是 Attention，而是：</p>
+<p><strong>Attention + position + FFN + residual + LayerNorm + 多层堆叠。</strong></p>
+<p>第二，不同 Transformer 架构并不是随便分叉出来的，而是和任务形式强相关：</p>
+<ul>
+<li>BERT 偏理解</li>
+<li>GPT 偏生成</li>
+<li>T5 偏条件生成</li>
+</ul>
+<p>第三，GPT 之所以成为现代通用大模型的主流路线之一，一个关键原因就在于：</p>
+<p><strong>decoder-only 与 next-token prediction 和自回归生成天然匹配。</strong></p>
+<p>理解了这一层，下一章再去从零实现一个 Mini-GPT，就不会只是“照着代码搭积木”，而是会知道每个模块为什么存在、为什么这样连接、为什么最终会长成 GPT 这种样子。</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Ferris-Liu" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "navigation.instant", "navigation.instant.progress", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

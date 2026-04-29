@@ -1,0 +1,4252 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="一个AI炼丹师的大模型学习笔记，从 Transformer、预训练、微调到 RAG、Agent 与部署实践。">
+      
+      
+        <meta name="author" content="FerrisLIU">
+      
+      
+        <link rel="canonical" href="https://ferris-liu.github.io/LLM-Start-from-the-scratch/book/13-lora-qlora-peft/">
+      
+      
+        <link rel="prev" href="../12-sft/">
+      
+      
+        <link rel="next" href="../14-alignment/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第 13 章：参数高效微调：LoRA / QLoRA / PEFT - 机器于此理解语言</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#13-lora-qlora-peft" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="机器于此理解语言" class="md-header__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器于此理解语言
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第 13 章：参数高效微调：LoRA / QLoRA / PEFT
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到浅色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换到浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="切换到深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换到深色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="机器于此理解语言" class="md-nav__button md-logo" aria-label="机器于此理解语言" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器于此理解语言
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    then-language-generates-by-computer
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about-author/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    作者介绍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前言
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何阅读这本书
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书提纲与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    从这里开始
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    从这里开始
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    全书导航
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    全书导航
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 0 · 学习路线与岗位定位
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-role-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 0 章：大模型岗位地图与学习路线
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 1 · 基础补齐
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 1 · 基础补齐
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-ml-dl-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    初学者入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pytorch-training-loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 2 章：PyTorch 与训练循环
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 2 · NLP 与语言模型基础
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-nlp-text-representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 3 章：NLP 基础与文本表示
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-ngram-to-neural-lm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 4 章：从 n-gram 到神经语言模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 3 · Transformer 核心
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 3 · Transformer 核心
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-attention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformer 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-transformer-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 6 章：Transformer 架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-mini-gpt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mini-GPT 入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 4 · 现代 LLM 训练流程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-tokenizer-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 8 章：Tokenizer 与数据处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-pretraining/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 9 章：预训练 Pretraining
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-scaling-law/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 10 章：Scaling Law 与大模型为什么变大
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 11 章：LLM 评估
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 5 · 后训练与微调
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 5 · 后训练与微调
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-sft/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 12 章：Supervised Fine-Tuning，SFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 13 章：参数高效微调：LoRA / QLoRA / PEFT
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 13 章：参数高效微调：LoRA / QLoRA / PEFT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 为什么全量微调越来越不现实
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 为什么全量微调越来越不现实">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 全量微调到底贵在哪里
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 存储成本也会很快爆炸
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 很多任务其实不需要“重写整个模型”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. PEFT：参数高效微调到底在省什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. PEFT：参数高效微调到底在省什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 它省的不是一步，而是整条链路
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-peft-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 常见 PEFT 方法里，LoRA 为什么最流行
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. LoRA 的核心直觉：不要重训整个矩阵，只学一个低秩增量
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. LoRA 的核心直觉：不要重训整个矩阵，只学一个低秩增量">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-low-rank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 为什么叫 low-rank
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 一个非常重要的直觉
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. LoRA 到底插在哪些地方
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. LoRA 到底插在哪些地方">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-target-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 最常见的 target modules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 为什么不是所有层都必须加
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-rankalphadropout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. rank、alpha、dropout 分别在控制什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. rank、alpha、dropout 分别在控制什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-r" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 r：低秩空间的容量
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-lora_alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 lora_alpha：对增量更新的缩放
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-lora_dropout-dropout-dropout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 lora_dropout：不是给底座加 dropout，而是给适配路径加 dropout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 从训练视角看，LoRA 到底省了什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 从训练视角看，LoRA 到底省了什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 可训练参数少了
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 梯度和优化器状态也跟着少了
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 每个任务只需保存 adapter
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. QLoRA：为什么还要再加量化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. QLoRA：为什么还要再加量化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 QLoRA 的核心思路
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 为什么这件事成立
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-4-bitnf4double-quantization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 常见关键词：4-bit、NF4、double quantization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-lora-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. LoRA 和 QLoRA 到底有什么区别
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. LoRA 和 QLoRA 到底有什么区别">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 LoRA 关注的是“怎么少训练”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 QLoRA 关注的是“怎么让底座更省显存地被加载”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. PEFT 工程实践里最常见的工作流
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. PEFT 工程实践里最常见的工作流">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 最关键的心智模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. 一个最小 LoRA 代码例子
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 一个最小 QLoRA 代码例子
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-mergeadapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 保存、加载、merge：adapter 生命周期怎么理解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. 保存、加载、merge：adapter 生命周期怎么理解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 保存 adapter，不是保存整模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 推理时需要“底座 + adapter”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.3 merge 的含义
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 一个可展示的微调项目应该怎么设计
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. 一个可展示的微调项目应该怎么设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#151" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.1 一个适合展示的项目结构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#152-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.2 最值得展示的不是 loss 曲线，而是行为变化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#153" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.3 最小实验矩阵就够了
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-lora-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. LoRA / QLoRA 常见坑
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. LoRA / QLoRA 常见坑">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161-target-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.1 target modules 选错或没覆盖
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162-chat-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.2 chat template 不一致
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#163-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.3 只看训练 loss，不看真实样本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#164" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.4 量化配置和硬件精度不匹配
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#165-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.5 以为 PEFT 可以无脑代替全量微调
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-lora-qlora-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. LoRA / QLoRA 和第 14 章偏好对齐的关系
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="18. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#181-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.1 “LoRA 就是蒸馏”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#182-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.2 “做了 LoRA，就等于不需要高质量数据”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#183-rank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.3 “rank 越大效果一定越好”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#184-qlora-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.4 “QLoRA 一定和 LoRA 一样稳”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="19. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#191-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.1 为什么 LoRA 能省显存
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#192-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.2 LoRA 和全量微调的核心区别是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#193-qlora-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.3 QLoRA 比 LoRA 多做了什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#194-lora-rank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.4 LoRA 的 rank 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#195-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.5 adapter 为什么可以单独保存
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#196-lora-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.6 为什么做 LoRA 仍然需要关心第 12 章的数据模板
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. 小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 14 章：偏好对齐：RLHF / DPO / RLAIF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part 6 · LLM 应用工程
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part 6 · LLM 应用工程
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-embedding-retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 15 章：Embedding、向量数据库与语义检索
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-rag/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-agent-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    应用入口：Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-llmops-deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第 18 章：LLMOps、部署与生产化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前沿技术观察
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    前沿技术观察
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_tech/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术条目池
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/frontier_reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    分析报告索引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/reports/deepseek-v4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeepSeek-V4 技术分析报告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontier/_report_template/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通用报告模板
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 本章要解决的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 你学完后应该会什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 为什么全量微调越来越不现实
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 为什么全量微调越来越不现实">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 全量微调到底贵在哪里
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 存储成本也会很快爆炸
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 很多任务其实不需要“重写整个模型”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. PEFT：参数高效微调到底在省什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. PEFT：参数高效微调到底在省什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 它省的不是一步，而是整条链路
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-peft-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 常见 PEFT 方法里，LoRA 为什么最流行
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. LoRA 的核心直觉：不要重训整个矩阵，只学一个低秩增量
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. LoRA 的核心直觉：不要重训整个矩阵，只学一个低秩增量">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-low-rank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 为什么叫 low-rank
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 一个非常重要的直觉
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. LoRA 到底插在哪些地方
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. LoRA 到底插在哪些地方">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-target-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 最常见的 target modules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 为什么不是所有层都必须加
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-rankalphadropout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. rank、alpha、dropout 分别在控制什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. rank、alpha、dropout 分别在控制什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-r" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 r：低秩空间的容量
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-lora_alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 lora_alpha：对增量更新的缩放
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-lora_dropout-dropout-dropout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 lora_dropout：不是给底座加 dropout，而是给适配路径加 dropout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 从训练视角看，LoRA 到底省了什么
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. 从训练视角看，LoRA 到底省了什么">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 可训练参数少了
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 梯度和优化器状态也跟着少了
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 每个任务只需保存 adapter
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. QLoRA：为什么还要再加量化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. QLoRA：为什么还要再加量化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 QLoRA 的核心思路
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 为什么这件事成立
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-4-bitnf4double-quantization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 常见关键词：4-bit、NF4、double quantization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-lora-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. LoRA 和 QLoRA 到底有什么区别
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. LoRA 和 QLoRA 到底有什么区别">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 LoRA 关注的是“怎么少训练”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 QLoRA 关注的是“怎么让底座更省显存地被加载”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. PEFT 工程实践里最常见的工作流
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. PEFT 工程实践里最常见的工作流">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 最关键的心智模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. 一个最小 LoRA 代码例子
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. 一个最小 QLoRA 代码例子
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-mergeadapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 保存、加载、merge：adapter 生命周期怎么理解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. 保存、加载、merge：adapter 生命周期怎么理解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 保存 adapter，不是保存整模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 推理时需要“底座 + adapter”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.3 merge 的含义
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 一个可展示的微调项目应该怎么设计
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. 一个可展示的微调项目应该怎么设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#151" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.1 一个适合展示的项目结构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#152-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.2 最值得展示的不是 loss 曲线，而是行为变化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#153" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.3 最小实验矩阵就够了
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-lora-qlora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. LoRA / QLoRA 常见坑
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. LoRA / QLoRA 常见坑">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161-target-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.1 target modules 选错或没覆盖
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162-chat-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.2 chat template 不一致
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#163-loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.3 只看训练 loss，不看真实样本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#164" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.4 量化配置和硬件精度不匹配
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#165-peft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.5 以为 PEFT 可以无脑代替全量微调
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-lora-qlora-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. LoRA / QLoRA 和第 14 章偏好对齐的关系
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. 常见误区
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="18. 常见误区">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#181-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.1 “LoRA 就是蒸馏”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#182-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.2 “做了 LoRA，就等于不需要高质量数据”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#183-rank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.3 “rank 越大效果一定越好”
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#184-qlora-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.4 “QLoRA 一定和 LoRA 一样稳”
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. 面试问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="19. 面试问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#191-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.1 为什么 LoRA 能省显存
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#192-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.2 LoRA 和全量微调的核心区别是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#193-qlora-lora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.3 QLoRA 比 LoRA 多做了什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#194-lora-rank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.4 LoRA 的 rank 是什么
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#195-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.5 adapter 为什么可以单独保存
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#196-lora-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.6 为什么做 LoRA 仍然需要关心第 12 章的数据模板
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. 小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Ferris-Liu/LLM-Start-from-the-scratch/edit/main/docs/book/13-lora-qlora-peft.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="13-lora-qlora-peft">第 13 章：参数高效微调：LoRA / QLoRA / PEFT<a class="headerlink" href="#13-lora-qlora-peft" title="Permanent link">&para;</a></h1>
+<h2 id="1">1. 本章要解决的问题<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>第 12 章里，我们已经把 SFT 的基本逻辑讲清楚了：</p>
+<ul>
+<li>预训练模型已经具备语言能力和知识能力</li>
+<li>SFT 用高质量示范把这些能力塑造成“会按指令完成任务”的行为</li>
+<li>从训练目标上看，SFT 仍然是 next-token prediction，只是训练分布换成了任务示范</li>
+</ul>
+<p>但一旦你真的准备动手做微调，就会立刻撞上一个非常现实的问题：</p>
+<p><strong>全量微调太贵了。</strong></p>
+<p>如果模型只有几亿参数，也许问题还不明显；但当底座模型来到 7B、13B，甚至更大时，事情马上会变得不一样：</p>
+<ul>
+<li>模型参数本身占显存</li>
+<li>反向传播还要保存梯度</li>
+<li>优化器状态往往还要额外占一大块内存</li>
+<li>每做一个任务都保存一整份新模型，存储成本也很高</li>
+</ul>
+<p>这时我们会发现，很多团队并不是“不想做 SFT”，而是：</p>
+<p><strong>想做，但做不起；或者做得起一次，做不起很多次。</strong></p>
+<p>这就是 LoRA、QLoRA、PEFT 出现的背景。</p>
+<p>从全书结构上看，这一章有三个作用：</p>
+<ul>
+<li>它承接第 12 章，把“可以做 SFT”推进到“怎样更省资源地做 SFT”</li>
+<li>它把“训练目标”进一步落到“参数该怎么更新、显存怎么省、权重怎么保存”这些工程问题上</li>
+<li>它也为第 14 章的偏好对齐铺路，因为很多对齐训练在工程上同样依赖 PEFT，而不是每次都全量改整个底座模型</li>
+</ul>
+<p>如果第 12 章回答的是：</p>
+<p><strong>当我们有了指令数据，怎样教会模型按示范回答。</strong></p>
+<p>那么这一章要回答的就是：</p>
+<p><strong>当底座模型已经很大、算力预算又有限时，怎样以更低成本完成这类微调。</strong></p>
+<h2 id="2">2. 你学完后应该会什么<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>能解释为什么全量微调在大模型时代往往不划算</li>
+<li>能理解 PEFT 这个总思路到底在省什么</li>
+<li>能说清 LoRA 的核心直觉：冻结大权重，只训练一个低秩增量</li>
+<li>能理解 rank、alpha、dropout、target modules 分别在控制什么</li>
+<li>能说清 QLoRA 和 LoRA 的区别，以及 4-bit quantization 在这里扮演什么角色</li>
+<li>能搭建一个最小可用的 LoRA / QLoRA 微调流程</li>
+<li>能理解 adapter 的保存、加载、merge 各是什么意思</li>
+<li>能知道什么时候该用 PEFT，什么时候不该盲目用</li>
+</ul>
+<h2 id="3">3. 为什么全量微调越来越不现实<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p>先把最重要的判断讲清楚：</p>
+<p><strong>LoRA 不是因为“更高级”才流行，而是因为它更符合大模型时代的资源现实。</strong></p>
+<h3 id="31">3.1 全量微调到底贵在哪里<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p>很多初学者会把“7B 模型”理解成“只要能放进显存里就能训”，但训练和推理不是一回事。</p>
+<p>推理时你主要需要：</p>
+<ul>
+<li>模型权重</li>
+<li>KV cache</li>
+<li>少量运行时缓存</li>
+</ul>
+<p>训练时除此之外还要额外承担：</p>
+<ul>
+<li>梯度</li>
+<li>优化器状态</li>
+<li>激活保存</li>
+</ul>
+<p>尤其如果你用的是 AdamW 这类优化器，参数之外还会维护一阶矩、二阶矩等状态。于是实际训练显存远远大于“模型权重本体”。</p>
+<p>所以真正的问题不是：</p>
+<p><strong>这个模型能不能加载进来。</strong></p>
+<p>而是：</p>
+<p><strong>这个模型能不能在反向传播和优化时活下来。</strong></p>
+<h3 id="32">3.2 存储成本也会很快爆炸<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<p>即使你显存够，全量微调还有另一个容易被忽视的成本：</p>
+<p><strong>每个任务都要保存一整份新权重。</strong></p>
+<p>想象你有一个 7B 底座模型，之后要做：</p>
+<ul>
+<li>中文客服版</li>
+<li>医疗问答版</li>
+<li>代码解释版</li>
+<li>数据分析助手版</li>
+</ul>
+<p>如果每个任务都产出一整份完整 checkpoint，那么模型管理会非常笨重。你会很快遇到：</p>
+<ul>
+<li>磁盘占用高</li>
+<li>分发成本高</li>
+<li>版本管理复杂</li>
+<li>回滚和比较麻烦</li>
+</ul>
+<h3 id="33">3.3 很多任务其实不需要“重写整个模型”<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<p>更关键的是，很多下游任务并不要求你把底座模型的全部知识重新学一遍。</p>
+<p>很多时候你只是想让它：</p>
+<ul>
+<li>学会某种回答风格</li>
+<li>掌握某类格式约束</li>
+<li>对某个领域任务更稳定</li>
+<li>对某些特定模式更敏感</li>
+</ul>
+<p>这类变化未必需要改动全部参数。</p>
+<p>于是一个很自然的问题就出现了：</p>
+<p><strong>有没有办法保留大模型原有能力，只用很少一部分新增参数来表达“这次任务需要的偏移量”？</strong></p>
+<p>LoRA 的答案就是：有。</p>
+<h2 id="4-peft">4. PEFT：参数高效微调到底在省什么<a class="headerlink" href="#4-peft" title="Permanent link">&para;</a></h2>
+<p>PEFT 是 <code>Parameter-Efficient Fine-Tuning</code> 的缩写。</p>
+<p>它不是单一算法，而是一大类思路的总称。它们的共同目标是：</p>
+<p><strong>尽量少更新参数、尽量少增加显存开销，同时保留接近全量微调的任务适配能力。</strong></p>
+<h3 id="41">4.1 它省的不是一步，而是整条链路<a class="headerlink" href="#41" title="Permanent link">&para;</a></h3>
+<p>当我们说 PEFT 更省资源时，通常是在同时节省几样东西：</p>
+<ul>
+<li>可训练参数数量</li>
+<li>梯度和优化器状态</li>
+<li>每个任务需要额外保存的权重体积</li>
+<li>多任务切换时的部署成本</li>
+</ul>
+<p>注意这里有一个常见误区：</p>
+<p><strong>PEFT 不一定让前向计算本身便宜很多，但它往往能显著降低训练和存储成本。</strong></p>
+<h3 id="42-peft-lora">4.2 常见 PEFT 方法里，LoRA 为什么最流行<a class="headerlink" href="#42-peft-lora" title="Permanent link">&para;</a></h3>
+<p>PEFT 不是只有 LoRA。</p>
+<p>历史上还出现过各种方法，例如：</p>
+<ul>
+<li>只训练 bias</li>
+<li>prefix tuning</li>
+<li>prompt tuning</li>
+<li>adapter tuning</li>
+</ul>
+<p>但 LoRA 之所以广泛流行，是因为它在几个维度上取得了很好的平衡：</p>
+<ul>
+<li>原理直观</li>
+<li>改动小</li>
+<li>与 Transformer 结构天然兼容</li>
+<li>参数量低</li>
+<li>实践中效果稳定</li>
+<li>工具链成熟</li>
+</ul>
+<p>所以今天很多人提到“做 PEFT”，实际默认说的就是“做 LoRA 或 QLoRA”。</p>
+<h2 id="5-lora">5. LoRA 的核心直觉：不要重训整个矩阵，只学一个低秩增量<a class="headerlink" href="#5-lora" title="Permanent link">&para;</a></h2>
+<p>这一节是整章最关键的原理部分。</p>
+<p>先从线性层开始。</p>
+<p>假设模型里有一个权重矩阵：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>W ∈ R^(d_out × d_in)
+</span></code></pre></div>
+<p>全量微调的做法是直接更新整个 <code>W</code>。也就是训练后得到：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>W&#39; = W + ΔW
+</span></code></pre></div>
+<p>这里的 <code>ΔW</code> 和 <code>W</code> 一样大，所以你本质上还是在训练一整个大矩阵。</p>
+<p>LoRA 的想法是：</p>
+<p><strong>也许这个任务需要的改动，本质上并不需要一个满秩的大矩阵来表达。</strong></p>
+<p>于是它把增量写成两个小矩阵的乘积：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ΔW = B A
+</span></code></pre></div>
+<p>其中：</p>
+<ul>
+<li><code>A ∈ R^(r × d_in)</code></li>
+<li><code>B ∈ R^(d_out × r)</code></li>
+<li><code>r</code> 远小于 <code>d_in</code> 和 <code>d_out</code></li>
+</ul>
+<p>于是新的权重变成：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>W&#39; = W + B A
+</span></code></pre></div>
+<p>而训练时：</p>
+<ul>
+<li>原始权重 <code>W</code> 冻结</li>
+<li>只训练 <code>A</code> 和 <code>B</code></li>
+</ul>
+<p>这就是 LoRA 最核心的结构。</p>
+<h3 id="51-low-rank">5.1 为什么叫 low-rank<a class="headerlink" href="#51-low-rank" title="Permanent link">&para;</a></h3>
+<p>因为 <code>BA</code> 的秩最多不会超过 <code>r</code>。</p>
+<p>当 <code>r</code> 很小时，这个增量矩阵就只能表达一个相对低维的变化子空间。直觉上就是：</p>
+<p><strong>我们不允许模型朝任意方向大改，只允许它在一个低维增量空间里做任务适配。</strong></p>
+<p>这听起来像是在“限制模型”，但实际经验发现：</p>
+<p>很多下游适配任务，本来就不需要改那么多自由度。</p>
+<h3 id="52">5.2 一个非常重要的直觉<a class="headerlink" href="#52" title="Permanent link">&para;</a></h3>
+<p>LoRA 并不是说原始权重不重要，恰恰相反：</p>
+<p><strong>原始预训练权重非常重要，所以我们尽量不碰它，只在旁边加一个小修正。</strong></p>
+<p>可以把它理解成：</p>
+<ul>
+<li>预训练底座负责提供通用能力</li>
+<li>LoRA 增量负责把能力轻推到某个任务方向</li>
+</ul>
+<p>这也是为什么 LoRA 往往特别适合：</p>
+<ul>
+<li>指令跟随增强</li>
+<li>领域化适配</li>
+<li>风格迁移</li>
+<li>小规模数据上的快速定制</li>
+</ul>
+<h2 id="6-lora">6. LoRA 到底插在哪些地方<a class="headerlink" href="#6-lora" title="Permanent link">&para;</a></h2>
+<p>LoRA 理论上可以加在很多线性层上，但在 Transformer 里，最常见的是加在 attention 和 MLP 的投影层上。</p>
+<h3 id="61-target-modules">6.1 最常见的 target modules<a class="headerlink" href="#61-target-modules" title="Permanent link">&para;</a></h3>
+<p>不同模型命名会不一样，但经常能看到这些模块：</p>
+<ul>
+<li><code>q_proj</code></li>
+<li><code>k_proj</code></li>
+<li><code>v_proj</code></li>
+<li><code>o_proj</code></li>
+<li><code>up_proj</code></li>
+<li><code>down_proj</code></li>
+<li><code>gate_proj</code></li>
+</ul>
+<p>其中最常见的起点通常是：</p>
+<ul>
+<li>先打在 attention 的 <code>q_proj</code>、<code>v_proj</code></li>
+<li>或者同时覆盖大部分主要线性层</li>
+</ul>
+<h3 id="62">6.2 为什么不是所有层都必须加<a class="headerlink" href="#62" title="Permanent link">&para;</a></h3>
+<p>因为 LoRA 追求的是“足够表达任务偏移”，不是“尽可能多改”。</p>
+<p>如果 target modules 选得太保守，可能：</p>
+<ul>
+<li>参数太少</li>
+<li>模型适配能力不够</li>
+</ul>
+<p>但如果选得太激进，也可能：</p>
+<ul>
+<li>可训练参数显著上升</li>
+<li>训练更慢</li>
+<li>更容易过拟合小数据</li>
+</ul>
+<p>所以 target modules 本质上是在回答一个问题：</p>
+<p><strong>你希望任务信号主要通过哪些计算路径进入模型。</strong></p>
+<h2 id="7-rankalphadropout">7. rank、alpha、dropout 分别在控制什么<a class="headerlink" href="#7-rankalphadropout" title="Permanent link">&para;</a></h2>
+<p>LoRA 训练里最常见的几个超参数是：</p>
+<ul>
+<li><code>r</code></li>
+<li><code>lora_alpha</code></li>
+<li><code>lora_dropout</code></li>
+</ul>
+<p>理解它们，比死记推荐默认值重要得多。</p>
+<h3 id="71-r">7.1 <code>r</code>：低秩空间的容量<a class="headerlink" href="#71-r" title="Permanent link">&para;</a></h3>
+<p><code>r</code> 就是 rank，也就是低秩分解里的中间维度。</p>
+<p>可以粗略理解成：</p>
+<p><strong>LoRA 适配器到底有多大的表达容量。</strong></p>
+<p>一般来说：</p>
+<ul>
+<li><code>r</code> 小：参数更少，更省，但表达能力更弱</li>
+<li><code>r</code> 大：表达能力更强，但训练成本更高，也更容易过拟合</li>
+</ul>
+<p>它不是越大越好，而是要和任务复杂度、数据量一起看。</p>
+<h3 id="72-lora_alpha">7.2 <code>lora_alpha</code>：对增量更新的缩放<a class="headerlink" href="#72-lora_alpha" title="Permanent link">&para;</a></h3>
+<p>LoRA 实际使用时，常会对 <code>BA</code> 再乘一个缩放系数，典型写法类似：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>W&#39; = W + (alpha / r) * B A
+</span></code></pre></div>
+<p>它的作用可以理解为：</p>
+<p><strong>控制 LoRA 增量注入主干权重时的强度。</strong></p>
+<p>如果 <code>alpha</code> 太小，适配器学到的变化即使存在，注入后影响也弱；如果太大，则可能让训练更不稳定。</p>
+<h3 id="73-lora_dropout-dropout-dropout">7.3 <code>lora_dropout</code>：不是给底座加 dropout，而是给适配路径加 dropout<a class="headerlink" href="#73-lora_dropout-dropout-dropout" title="Permanent link">&para;</a></h3>
+<p>这点很多人第一次会混淆。</p>
+<p><code>lora_dropout</code> 一般是作用在 LoRA 支路上，而不是把整个底座模型都重新改成更强 dropout。</p>
+<p>它主要是为了：</p>
+<ul>
+<li>减少小数据过拟合</li>
+<li>让 LoRA 增量不要过度依赖少量路径</li>
+</ul>
+<p>如果你的数据量非常小，适当的 dropout 往往比一味增大 rank 更稳。</p>
+<h2 id="8-lora">8. 从训练视角看，LoRA 到底省了什么<a class="headerlink" href="#8-lora" title="Permanent link">&para;</a></h2>
+<p>这里值得把账再算一遍。</p>
+<h3 id="81">8.1 可训练参数少了<a class="headerlink" href="#81" title="Permanent link">&para;</a></h3>
+<p>原来一个大矩阵 <code>W</code> 全量训练要更新 <code>d_out × d_in</code> 个参数。</p>
+<p>LoRA 只训练：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>r × d_in + d_out × r
+</span></code></pre></div>
+<p>如果 <code>r</code> 很小，这个数量会比原矩阵小很多。</p>
+<h3 id="82">8.2 梯度和优化器状态也跟着少了<a class="headerlink" href="#82" title="Permanent link">&para;</a></h3>
+<p>因为冻结的参数不需要维护梯度和优化器状态，所以真正省掉的不只是“参数文件大小”，而是训练期间最贵的一块内存负担。</p>
+<p>这也是 LoRA 实际上非常有价值的地方：</p>
+<p><strong>它让“大模型适配”从只有高预算团队能做，变成个人或小团队也有机会做。</strong></p>
+<h3 id="83-adapter">8.3 每个任务只需保存 adapter<a class="headerlink" href="#83-adapter" title="Permanent link">&para;</a></h3>
+<p>训练结束后，你不一定要保存一整份大模型，而是只保存 LoRA adapter 权重。</p>
+<p>这样做的好处非常直接：</p>
+<ul>
+<li>文件小很多</li>
+<li>多任务切换方便</li>
+<li>底座模型可复用</li>
+<li>分发和部署更轻</li>
+</ul>
+<p>所以很多团队的做法是：</p>
+<ul>
+<li>维护一个稳定的 base model</li>
+<li>针对不同业务场景训练多个 adapter</li>
+<li>需要哪个任务，就加载哪个 adapter</li>
+</ul>
+<h2 id="9-qlora">9. QLoRA：为什么还要再加量化<a class="headerlink" href="#9-qlora" title="Permanent link">&para;</a></h2>
+<p>LoRA 已经省了很多训练参数，但还有一个没解决的问题：</p>
+<p><strong>底座模型本身还是很大。</strong></p>
+<p>即使你冻结它，单是把它加载进显存，也可能已经很吃紧。</p>
+<p>于是 QLoRA 更进一步：</p>
+<p><strong>既然底座模型冻结，那能不能把冻结权重用更低精度存起来，从而进一步节省显存？</strong></p>
+<p>答案就是 QLoRA。</p>
+<h3 id="91-qlora">9.1 QLoRA 的核心思路<a class="headerlink" href="#91-qlora" title="Permanent link">&para;</a></h3>
+<p>可以把 QLoRA 概括成一句话：</p>
+<p><strong>把冻结的底座模型量化到 4-bit 附近，再在其上训练 LoRA adapter。</strong></p>
+<p>也就是说：</p>
+<ul>
+<li>底座模型：量化存储，减少显存</li>
+<li>可训练部分：仍然是 LoRA adapter</li>
+<li>反向传播：主要穿过 adapter 路径</li>
+</ul>
+<p>因此，QLoRA 不是“量化后全量训练”，而是：</p>
+<p><strong>量化底座 + LoRA 微调。</strong></p>
+<h3 id="92">9.2 为什么这件事成立<a class="headerlink" href="#92" title="Permanent link">&para;</a></h3>
+<p>因为 LoRA 本来就不更新底座大权重。</p>
+<p>既然底座只是前向时提供能力底盘，那么我们可以接受：</p>
+<ul>
+<li>用更紧凑的格式存它</li>
+<li>在计算时做必要的反量化或混合精度处理</li>
+</ul>
+<p>这样就能在不显著牺牲效果的前提下，把训练资源门槛再往下压一大截。</p>
+<h3 id="93-4-bitnf4double-quantization">9.3 常见关键词：4-bit、NF4、double quantization<a class="headerlink" href="#93-4-bitnf4double-quantization" title="Permanent link">&para;</a></h3>
+<p>你在 QLoRA 资料里经常会看到这些词：</p>
+<ul>
+<li>4-bit quantization</li>
+<li>NF4</li>
+<li>double quantization</li>
+</ul>
+<p>作为本书这一阶段，你先抓住三点就够了：</p>
+<ul>
+<li><code>4-bit</code> 的目标是压缩冻结权重占用</li>
+<li><code>NF4</code> 是一种更适合正态分布权重的 4-bit 表示方式</li>
+<li><code>double quantization</code> 是进一步减少量化常数本身的存储开销</li>
+</ul>
+<p>这里你不需要先钻进所有量化数学细节，先理解工程目标更重要：</p>
+<p><strong>QLoRA 的第一价值，是让本来放不下、训不起的模型，变成“可以在更有限资源下做微调”。</strong></p>
+<h2 id="10-lora-qlora">10. LoRA 和 QLoRA 到底有什么区别<a class="headerlink" href="#10-lora-qlora" title="Permanent link">&para;</a></h2>
+<p>很多人会把这两个词混用，但最好明确区分。</p>
+<h3 id="101-lora">10.1 LoRA 关注的是“怎么少训练”<a class="headerlink" href="#101-lora" title="Permanent link">&para;</a></h3>
+<p>LoRA 的重点是：</p>
+<ul>
+<li>冻结大权重</li>
+<li>只训练低秩增量</li>
+</ul>
+<p>它解决的是：</p>
+<p><strong>训练参数太多、优化器状态太大、每任务存储太重。</strong></p>
+<h3 id="102-qlora">10.2 QLoRA 关注的是“怎么让底座更省显存地被加载”<a class="headerlink" href="#102-qlora" title="Permanent link">&para;</a></h3>
+<p>QLoRA 在 LoRA 基础上再加一层：</p>
+<ul>
+<li>把底座量化</li>
+</ul>
+<p>它进一步解决的是：</p>
+<p><strong>即使不训练底座，它本身加载起来也太占显存。</strong></p>
+<p>所以可以把关系记成：</p>
+<ul>
+<li>LoRA：参数高效微调</li>
+<li>QLoRA：量化底座上的 LoRA 微调</li>
+</ul>
+<p>换句话说：</p>
+<p><strong>QLoRA 不是 LoRA 的竞争者，而是 LoRA 在显存更紧场景下的一种更激进实现。</strong></p>
+<h2 id="11-peft">11. PEFT 工程实践里最常见的工作流<a class="headerlink" href="#11-peft" title="Permanent link">&para;</a></h2>
+<p>到这里，我们把概念转成操作流程。</p>
+<p>一个最常见的 LoRA / QLoRA 微调链路通常长这样：</p>
+<ol>
+<li>选择一个 instruction-tuned 或 base 模型作为底座</li>
+<li>准备与第 12 章一致的 SFT 数据</li>
+<li>加载 tokenizer 和 base model</li>
+<li>如果做 QLoRA，则用 4-bit 方式加载冻结底座</li>
+<li>配置 LoRA adapter，并指定 target modules</li>
+<li>只训练 LoRA 参数</li>
+<li>保存 adapter</li>
+<li>推理时把 adapter 挂回底座，或在需要时 merge</li>
+</ol>
+<h3 id="111">11.1 最关键的心智模型<a class="headerlink" href="#111" title="Permanent link">&para;</a></h3>
+<p>这条流程里，数据侧其实没有变。</p>
+<p>第 12 章里你学会的：</p>
+<ul>
+<li>指令数据组织</li>
+<li>chat template</li>
+<li>labels 和 loss mask</li>
+<li>训练评估逻辑</li>
+</ul>
+<p>在这一章仍然都成立。</p>
+<p>真正变化的是模型侧：</p>
+<p><strong>不是改“训练目标”，而是改“哪些参数能动、底座以什么精度存在”。</strong></p>
+<h2 id="12-lora">12. 一个最小 LoRA 代码例子<a class="headerlink" href="#12-lora" title="Permanent link">&para;</a></h2>
+<p>下面给一个偏教学化的最小示意，帮助你看清楚 LoRA 是怎样接到 Hugging Face / PEFT 工作流里的。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoModelForCausalLM</span><span class="p">,</span> <span class="n">AutoTokenizer</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">peft</span><span class="w"> </span><span class="kn">import</span> <span class="n">LoraConfig</span><span class="p">,</span> <span class="n">get_peft_model</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;Qwen/Qwen2.5-0.5B-Instruct&quot;</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">model</span> <span class="o">=</span> <span class="n">AutoModelForCausalLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">lora_config</span> <span class="o">=</span> <span class="n">LoraConfig</span><span class="p">(</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="n">r</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    <span class="n">lora_alpha</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="n">lora_dropout</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    <span class="n">bias</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    <span class="n">task_type</span><span class="o">=</span><span class="s2">&quot;CAUSAL_LM&quot;</span><span class="p">,</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    <span class="n">target_modules</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;q_proj&quot;</span><span class="p">,</span> <span class="s2">&quot;v_proj&quot;</span><span class="p">],</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="p">)</span>
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="n">model</span> <span class="o">=</span> <span class="n">get_peft_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">lora_config</span><span class="p">)</span>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="n">model</span><span class="o">.</span><span class="n">print_trainable_parameters</span><span class="p">()</span>
+</span></code></pre></div>
+<p>这段代码做了几件事：</p>
+<ul>
+<li>加载原始 causal LM</li>
+<li>定义 LoRA 配置</li>
+<li>指定要插入 LoRA 的模块</li>
+<li>把普通模型包装成 PEFT 模型</li>
+</ul>
+<p>这时如果你去看参数状态，会发现：</p>
+<ul>
+<li>底座绝大部分参数被冻结</li>
+<li>只有 LoRA 相关参数是可训练的</li>
+</ul>
+<p>然后你的训练代码，原则上就可以继续沿用第 12 章那套 SFT 流程。</p>
+<h2 id="13-qlora">13. 一个最小 QLoRA 代码例子<a class="headerlink" href="#13-qlora" title="Permanent link">&para;</a></h2>
+<p>如果切到 QLoRA，常见区别主要出现在模型加载阶段。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoModelForCausalLM</span><span class="p">,</span> <span class="n">AutoTokenizer</span><span class="p">,</span> <span class="n">BitsAndBytesConfig</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">peft</span><span class="w"> </span><span class="kn">import</span> <span class="n">LoraConfig</span><span class="p">,</span> <span class="n">get_peft_model</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;Qwen/Qwen2.5-0.5B-Instruct&quot;</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">bnb_config</span> <span class="o">=</span> <span class="n">BitsAndBytesConfig</span><span class="p">(</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">load_in_4bit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="n">bnb_4bit_quant_type</span><span class="o">=</span><span class="s2">&quot;nf4&quot;</span><span class="p">,</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    <span class="n">bnb_4bit_use_double_quant</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>    <span class="n">bnb_4bit_compute_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">,</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="p">)</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="n">model</span> <span class="o">=</span> <span class="n">AutoModelForCausalLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>    <span class="n">model_name</span><span class="p">,</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>    <span class="n">quantization_config</span><span class="o">=</span><span class="n">bnb_config</span><span class="p">,</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>    <span class="n">device_map</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="p">)</span>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="n">lora_config</span> <span class="o">=</span> <span class="n">LoraConfig</span><span class="p">(</span>
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>    <span class="n">r</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>    <span class="n">lora_alpha</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>    <span class="n">lora_dropout</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>    <span class="n">bias</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>    <span class="n">task_type</span><span class="o">=</span><span class="s2">&quot;CAUSAL_LM&quot;</span><span class="p">,</span>
+</span><span id="__span-7-27"><a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a>    <span class="n">target_modules</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;q_proj&quot;</span><span class="p">,</span> <span class="s2">&quot;k_proj&quot;</span><span class="p">,</span> <span class="s2">&quot;v_proj&quot;</span><span class="p">,</span> <span class="s2">&quot;o_proj&quot;</span><span class="p">],</span>
+</span><span id="__span-7-28"><a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a><span class="p">)</span>
+</span><span id="__span-7-29"><a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a>
+</span><span id="__span-7-30"><a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a><span class="n">model</span> <span class="o">=</span> <span class="n">get_peft_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">lora_config</span><span class="p">)</span>
+</span><span id="__span-7-31"><a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a><span class="n">model</span><span class="o">.</span><span class="n">print_trainable_parameters</span><span class="p">()</span>
+</span></code></pre></div>
+<p>要注意的是，这段代码只是最小示意，不代表所有模型都该照抄同一组 target modules 或超参数。</p>
+<p>但它足够说明一个本质：</p>
+<p><strong>QLoRA 和普通 SFT 最大的工程差异，不在数据，而在“量化底座 + LoRA 包装”这一步。</strong></p>
+<h2 id="14-mergeadapter">14. 保存、加载、merge：adapter 生命周期怎么理解<a class="headerlink" href="#14-mergeadapter" title="Permanent link">&para;</a></h2>
+<p>这一节很实用，因为很多人第一次做完训练后，并不知道该怎么理解产物。</p>
+<h3 id="141-adapter">14.1 保存 adapter，不是保存整模型<a class="headerlink" href="#141-adapter" title="Permanent link">&para;</a></h3>
+<p>在 LoRA / QLoRA 训练里，最常见的保存方式是：</p>
+<p><strong>只保存适配器权重。</strong></p>
+<p>因为真正变化的是 LoRA 参数，而不是整个 base model。</p>
+<p>这意味着你的 checkpoint 通常会比全量微调小很多。</p>
+<h3 id="142-adapter">14.2 推理时需要“底座 + adapter”<a class="headerlink" href="#142-adapter" title="Permanent link">&para;</a></h3>
+<p>如果你只保存了 adapter，那么推理时并不是单独加载它就够了，而是要：</p>
+<ul>
+<li>先加载与训练时一致的底座模型</li>
+<li>再把 adapter 挂上去</li>
+</ul>
+<p>这背后的逻辑非常自然：</p>
+<p>adapter 表达的是“相对底座的增量”，不是一个能独立存在的完整模型。</p>
+<h3 id="143-merge">14.3 merge 的含义<a class="headerlink" href="#143-merge" title="Permanent link">&para;</a></h3>
+<p>有些时候你会看到 <code>merge_and_unload()</code> 这类操作。</p>
+<p>它的意思通常是：</p>
+<p><strong>把 LoRA 增量真正并回主权重，得到一份不再依赖独立 adapter 的模型。</strong></p>
+<p>这样做的优点可能是：</p>
+<ul>
+<li>部署链路更简单</li>
+<li>某些推理框架兼容性更好</li>
+</ul>
+<p>但代价是：</p>
+<ul>
+<li>失去“一个底座切多个 adapter”的轻量切换优势</li>
+<li>产物体积可能重新变大</li>
+</ul>
+<p>所以是否 merge，不是固定答案，而是部署选择。</p>
+<h2 id="15">15. 一个可展示的微调项目应该怎么设计<a class="headerlink" href="#15" title="Permanent link">&para;</a></h2>
+<p>如果你想把这一章真正落成作品，最好的方式不是只跑通训练脚本，而是做一个能讲清楚实验逻辑的小项目。</p>
+<h3 id="151">15.1 一个适合展示的项目结构<a class="headerlink" href="#151" title="Permanent link">&para;</a></h3>
+<p>你可以选择一个足够具体、但又不至于太重的任务，例如：</p>
+<ul>
+<li>把通用模型微调成“机器学习概念讲解助手”</li>
+<li>把通用模型微调成“中文论文摘要助手”</li>
+<li>把通用模型微调成“SQL 问题解释助手”</li>
+</ul>
+<p>项目里最好明确交代四件事：</p>
+<ul>
+<li>任务是什么</li>
+<li>数据怎么来、怎么清洗</li>
+<li>为什么选 LoRA 或 QLoRA</li>
+<li>微调前后有什么实际变化</li>
+</ul>
+<h3 id="152-loss">15.2 最值得展示的不是 loss 曲线，而是行为变化<a class="headerlink" href="#152-loss" title="Permanent link">&para;</a></h3>
+<p>很多项目容易犯的错是：</p>
+<ul>
+<li>放一堆训练日志</li>
+<li>放一堆超参数表</li>
+<li>但看不出模型到底变好了什么</li>
+</ul>
+<p>更好的展示方式是直接对比：</p>
+<ul>
+<li>微调前回答</li>
+<li>微调后回答</li>
+<li>哪些行为变稳了</li>
+<li>哪些问题仍然没解决</li>
+</ul>
+<p>例如可以重点展示：</p>
+<ul>
+<li>是否更遵守输出格式</li>
+<li>是否更少答非所问</li>
+<li>是否更符合目标领域表达</li>
+<li>是否对关键术语解释更稳定</li>
+</ul>
+<h3 id="153">15.3 最小实验矩阵就够了<a class="headerlink" href="#153" title="Permanent link">&para;</a></h3>
+<p>你不需要一上来做十几组实验。</p>
+<p>一个很实用的最小矩阵是：</p>
+<ul>
+<li>baseline：不微调</li>
+<li>LoRA：较小 rank</li>
+<li>LoRA：较大 rank</li>
+<li>QLoRA：同任务、相近配置</li>
+</ul>
+<p>你真正想回答的是：</p>
+<p><strong>在你的任务上，参数效率方案到底换来了什么，牺牲了什么。</strong></p>
+<h2 id="16-lora-qlora">16. LoRA / QLoRA 常见坑<a class="headerlink" href="#16-lora-qlora" title="Permanent link">&para;</a></h2>
+<p>这一节非常重要，因为很多人“跑通了”，但结果不稳定，往往是踩了工程坑。</p>
+<h3 id="161-target-modules">16.1 target modules 选错或没覆盖<a class="headerlink" href="#161-target-modules" title="Permanent link">&para;</a></h3>
+<p>如果模型结构和你预想的不一样，而你照着别人的名字填 <code>q_proj</code>、<code>v_proj</code>，可能会出现：</p>
+<ul>
+<li>根本没插进去</li>
+<li>只插进了很少一部分层</li>
+<li>可训练参数数量异常</li>
+</ul>
+<p>所以第一件事通常是检查模型模块名，而不是盲抄配置。</p>
+<h3 id="162-chat-template">16.2 chat template 不一致<a class="headerlink" href="#162-chat-template" title="Permanent link">&para;</a></h3>
+<p>这一坑并不是 LoRA 独有，但在微调项目里非常常见。</p>
+<p>如果训练时和推理时用的对话模板不一致，就会出现：</p>
+<ul>
+<li>格式变怪</li>
+<li>角色混乱</li>
+<li>输出风格偏移</li>
+</ul>
+<p>这时很多人会误以为“LoRA 效果不好”，其实问题出在第 12 章讲过的数据拼接协议。</p>
+<h3 id="163-loss">16.3 只看训练 loss，不看真实样本<a class="headerlink" href="#163-loss" title="Permanent link">&para;</a></h3>
+<p>LoRA 参数少，并不意味着它不会过拟合。</p>
+<p>尤其当你的数据：</p>
+<ul>
+<li>很少</li>
+<li>很重复</li>
+<li>风格单一</li>
+</ul>
+<p>模型可能很快把训练集模式学得很紧，但泛化并不好。</p>
+<p>所以最值得坚持的做法仍然是：</p>
+<ul>
+<li>留出验证样本</li>
+<li>固定一组人工检查 prompt</li>
+<li>比较微调前后真实输出</li>
+</ul>
+<h3 id="164">16.4 量化配置和硬件精度不匹配<a class="headerlink" href="#164" title="Permanent link">&para;</a></h3>
+<p>做 QLoRA 时，如果量化配置、计算 dtype、硬件支持没有协调好，可能会碰到：</p>
+<ul>
+<li>训练不稳定</li>
+<li>显存节省不如预期</li>
+<li>某些层报错</li>
+</ul>
+<p>这类问题往往不是“理论错了”，而是工程栈兼容性问题。</p>
+<h3 id="165-peft">16.5 以为 PEFT 可以无脑代替全量微调<a class="headerlink" href="#165-peft" title="Permanent link">&para;</a></h3>
+<p>这是另一个常见误区。</p>
+<p>PEFT 很强，但不是对所有任务都一定最优。</p>
+<p>如果你的任务需要：</p>
+<ul>
+<li>对模型内部能力做非常深层重塑</li>
+<li>大规模跨分布迁移</li>
+<li>极强的任务专门化</li>
+</ul>
+<p>那么 LoRA 不一定总能替代全量微调。</p>
+<p>正确理解应该是：</p>
+<p><strong>PEFT 是非常强的默认起点，但不是永远唯一答案。</strong></p>
+<h2 id="17-lora-qlora-14">17. LoRA / QLoRA 和第 14 章偏好对齐的关系<a class="headerlink" href="#17-lora-qlora-14" title="Permanent link">&para;</a></h2>
+<p>这一节是为了把全书主线接起来。</p>
+<p>第 12 章我们讲 SFT，本质是在学：</p>
+<p><strong>给定指令，什么叫“像样的回答”。</strong></p>
+<p>第 13 章我们讲 LoRA / QLoRA，本质是在学：</p>
+<p><strong>怎样更省资源地完成这种微调。</strong></p>
+<p>而第 14 章要继续往前走，讨论的是：</p>
+<p><strong>如果“像样的回答”不只取决于标准答案，而更多取决于偏好比较，我们该怎么训练？</strong></p>
+<p>所以顺序非常自然：</p>
+<ol>
+<li>先有预训练底座</li>
+<li>再用 SFT 学会基本指令跟随</li>
+<li>再用 PEFT 把这件事做得更现实、更省钱</li>
+<li>最后进入偏好对齐，学习更细粒度的“哪种回答更好”</li>
+</ol>
+<p>更重要的是，在实际工程里：</p>
+<p><strong>很多 DPO、RLHF、RLAIF 实验，底层也会继续使用 LoRA 或 QLoRA。</strong></p>
+<p>因为偏好对齐本身通常也不便宜，而 PEFT 能显著降低试验门槛。</p>
+<h2 id="18">18. 常见误区<a class="headerlink" href="#18" title="Permanent link">&para;</a></h2>
+<h3 id="181-lora">18.1 “LoRA 就是蒸馏”<a class="headerlink" href="#181-lora" title="Permanent link">&para;</a></h3>
+<p>不是。</p>
+<p>蒸馏强调的是：</p>
+<ul>
+<li>用一个教师模型指导学生模型</li>
+</ul>
+<p>LoRA 强调的是：</p>
+<ul>
+<li>在同一个底座模型上，用低秩适配器完成参数高效微调</li>
+</ul>
+<p>两者解决的问题不同。</p>
+<h3 id="182-lora">18.2 “做了 LoRA，就等于不需要高质量数据”<a class="headerlink" href="#182-lora" title="Permanent link">&para;</a></h3>
+<p>也不是。</p>
+<p>LoRA 只是降低参数更新成本，并不会自动提高数据质量。</p>
+<p>如果训练数据本身：</p>
+<ul>
+<li>风格混乱</li>
+<li>标注不一致</li>
+<li>任务边界不清</li>
+</ul>
+<p>那 LoRA 一样会学歪。</p>
+<h3 id="183-rank">18.3 “rank 越大效果一定越好”<a class="headerlink" href="#183-rank" title="Permanent link">&para;</a></h3>
+<p>不成立。</p>
+<p>更大的 rank 确实增加表达能力，但也带来：</p>
+<ul>
+<li>更多参数</li>
+<li>更多显存</li>
+<li>更大过拟合风险</li>
+</ul>
+<p>它是容量旋钮，不是无脑拉满的指标。</p>
+<h3 id="184-qlora-lora">18.4 “QLoRA 一定和 LoRA 一样稳”<a class="headerlink" href="#184-qlora-lora" title="Permanent link">&para;</a></h3>
+<p>也不能这么说。</p>
+<p>QLoRA 的资源效率更高，但因为引入了量化，工程复杂度通常也更高。你需要在：</p>
+<ul>
+<li>显存预算</li>
+<li>训练稳定性</li>
+<li>工具链兼容性</li>
+</ul>
+<p>之间做平衡。</p>
+<h2 id="19">19. 面试问题<a class="headerlink" href="#19" title="Permanent link">&para;</a></h2>
+<h3 id="191-lora">19.1 为什么 LoRA 能省显存<a class="headerlink" href="#191-lora" title="Permanent link">&para;</a></h3>
+<p>因为它冻结大部分底座参数，只训练少量低秩适配器参数，因此可训练参数、梯度和优化器状态都显著减少。</p>
+<h3 id="192-lora">19.2 LoRA 和全量微调的核心区别是什么<a class="headerlink" href="#192-lora" title="Permanent link">&para;</a></h3>
+<p>全量微调直接更新原模型全部或大部分参数；LoRA 保留原始权重不动，只学习一个低秩增量并叠加到指定线性层上。</p>
+<h3 id="193-qlora-lora">19.3 QLoRA 比 LoRA 多做了什么<a class="headerlink" href="#193-qlora-lora" title="Permanent link">&para;</a></h3>
+<p>QLoRA 在 LoRA 基础上把冻结底座模型量化到更低比特数，从而进一步降低底座加载时的显存占用。</p>
+<h3 id="194-lora-rank">19.4 LoRA 的 rank 是什么<a class="headerlink" href="#194-lora-rank" title="Permanent link">&para;</a></h3>
+<p>rank 是低秩分解的中间维度，决定适配器的表达容量。rank 越大，参数更多、容量更强，但成本和过拟合风险也会上升。</p>
+<h3 id="195-adapter">19.5 adapter 为什么可以单独保存<a class="headerlink" href="#195-adapter" title="Permanent link">&para;</a></h3>
+<p>因为 LoRA 学到的是相对底座权重的增量，而底座本身没有被改动，所以每个任务只需要单独保存这组增量参数。</p>
+<h3 id="196-lora-12">19.6 为什么做 LoRA 仍然需要关心第 12 章的数据模板<a class="headerlink" href="#196-lora-12" title="Permanent link">&para;</a></h3>
+<p>因为 LoRA 只是改变“怎么训练参数”，并没有改变“模型到底在学什么输入输出分布”。如果 chat template、labels 或 loss mask 出错，LoRA 一样会学坏。</p>
+<h2 id="20">20. 小结<a class="headerlink" href="#20" title="Permanent link">&para;</a></h2>
+<p>这一章最重要的结论可以压缩成四句话：</p>
+<ul>
+<li>第 12 章解决的是“怎样做 SFT”，这一章解决的是“怎样更省资源地做 SFT”</li>
+<li>LoRA 的核心是冻结底座，只训练低秩增量</li>
+<li>QLoRA 的核心是在 LoRA 基础上，把冻结底座进一步量化来省显存</li>
+<li>PEFT 改变的主要是参数更新方式，不改变第 12 章那套数据、模板和训练目标的基本逻辑</li>
+</ul>
+<p>如果说第 12 章让我们第一次具备了“把模型训练成助手”的能力，那么这一章真正带来的，是把这件事从“理论上能做”推进到“预算有限时也能做”。</p>
+<p>下一章我们继续往前走。</p>
+<p>当模型已经会按指令回答，而且我们也知道怎样低成本地训练它后，新的问题就会变成：</p>
+<p><strong>两条回答都看起来合理时，模型到底该更偏向哪一种？</strong></p>
+<p>这就是偏好对齐要处理的问题。</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年4月29日 05:20:59 UTC">2026年4月29日</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Ferris-Liu" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "navigation.instant", "navigation.instant.progress", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "content.action.edit", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
